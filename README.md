@@ -3,7 +3,7 @@
 SaltyNX plugin that collects FPS data in Nintendo Switch games. You need my fork of SaltyNX installed.
 https://github.com/masagrator/SaltyNX/releases
 
-Currentyl supported APIs:
+Currently supported APIs:
 - NVN
 
 Not working games additionally to SaltyNX list you can find [here](https://github.com/masagrator/SaltyNX/blob/master/README.md)
