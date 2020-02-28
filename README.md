@@ -29,6 +29,7 @@ Plugin brings some instability to boot process for some games. It is recommended
 Not working games with this plugin (You can find games not compatible with SaltyNX [here](https://github.com/masagrator/SaltyNX/blob/master/README.md))
 | Title | Version(s) | Why? |
 | ------------- | ------------- | ------------- |
+| Mosaic | all | ? (not checked) |
 | The Talos Principle | all | Different graphics API, for FPS counter check [here](https://gbatemp.net/threads/the-talos-principle-graphics-settings.555045/) |
 | The Unholy Society | all | Different graphics API (EGL) |
 
