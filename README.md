@@ -1,4 +1,5 @@
-#NX-FPS
+# NX-FPS
+
 SaltyNX plugin that collects FPS data in Nintendo Switch games. You need my fork of SaltyNX installed.
 https://github.com/masagrator/SaltyNX/releases
 
