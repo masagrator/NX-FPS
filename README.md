@@ -35,6 +35,6 @@ Not working games with this plugin (You can find games not compatible with Salty
 | The Unholy Society | all | Different graphics API (OpenGL/EGL) |
 
 # Troubleshooting
-Q: Why game constantly shows 255?
+Q: Why I got constantly 255?
 
-A: This may be a sign that game is using different API. Make an issue and state name of game. Next updates will include support for other graphics APIs.
+A: 255 is default value before plugin starts counting frames. This may be a sign that game is using different API. Make an issue and state name of game. Next updates will include support for other graphics APIs.
