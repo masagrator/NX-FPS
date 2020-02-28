@@ -20,7 +20,7 @@ If files are already there, they are rewritten by new pointers with each new gam
 To show it on display, you can use Status Monitor Overlay >=0.4
 https://github.com/masagrator/Status-Monitor-Overlay
 
-Not working games with this plugin additionally to SaltyNX list, you can find games not compatible with SaltyNX [here](https://github.com/masagrator/SaltyNX/blob/master/README.md)
+Not working games with this plugin, you can find games not compatible with SaltyNX [here](https://github.com/masagrator/SaltyNX/blob/master/README.md)
 | Title | Version(s) | Why? |
 | ------------- | ------------- | ------------- |
 | The Talos Principle | all | Different API, for FPS counter check [here](https://gbatemp.net/threads/the-talos-principle-graphics-settings.555045/) |
