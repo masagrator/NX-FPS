@@ -21,6 +21,7 @@ To show it on display, you can use Status Monitor Overlay >=0.4
 https://github.com/masagrator/Status-Monitor-Overlay
 
 >WARNING
+
 Plugin brings some instability to boot process for some games. It is recommended to not close game before ~10 seconds have passed from showing Nintendo logo, otherwise you risk Kernel panic, which results in crashing OS.
 
 ---
