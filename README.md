@@ -5,7 +5,7 @@ https://github.com/masagrator/SaltyNX/releases
 
 Put NX-FPS.elf to `/SaltySD/plugins`
 
-Currently supported APIs:
+Currently supported graphics APIs:
 - NVN
 
 When game is booted, plugin outputs two files:
@@ -23,10 +23,10 @@ https://github.com/masagrator/Status-Monitor-Overlay
 Not working games with this plugin, you can find games not compatible with SaltyNX [here](https://github.com/masagrator/SaltyNX/blob/master/README.md)
 | Title | Version(s) | Why? |
 | ------------- | ------------- | ------------- |
-| The Talos Principle | all | Different API, for FPS counter check [here](https://gbatemp.net/threads/the-talos-principle-graphics-settings.555045/) |
-| The Unholy Society | all | Different API (EGL) |
+| The Talos Principle | all | Different graphics API, for FPS counter check [here](https://gbatemp.net/threads/the-talos-principle-graphics-settings.555045/) |
+| The Unholy Society | all | Different graphics API (EGL) |
 
 # Troubleshooting
 Q: Why game constantly shows 255?
 
-A: This may be a sign that game is using different API. Make an issue and state name of game.
+A: This may be a sign that game is using different API. Make an issue and state name of game. Next updates will include support for other graphics APIs.
