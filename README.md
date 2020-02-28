@@ -25,3 +25,8 @@ Not working games with this plugin, you can find games not compatible with Salty
 | ------------- | ------------- | ------------- |
 | The Talos Principle | all | Different API, for FPS counter check [here](https://gbatemp.net/threads/the-talos-principle-graphics-settings.555045/) |
 | The Unholy Society | all | Different API (EGL) |
+
+# Troubleshooting
+Q: Why game constantly shows 255?
+
+A: This may be a sign that game is using different API. Make an issue and state name of game.
