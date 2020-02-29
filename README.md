@@ -13,7 +13,7 @@ When game is booted, plugin outputs one file:
 /SaltySD/FPSoffset.hex
 ```
 
-There is stored address where you can find PFPS and FPS which has address `PFPS - 0x8`.
+There is stored address where you can find PFPS, FPS has address `PFPS - 0x8`.
 If files is already there, it's rewritten by new pointer with each new game boot.
 
 To show it on display, you can use Status Monitor Overlay >=0.4
