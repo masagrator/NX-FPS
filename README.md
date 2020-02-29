@@ -8,13 +8,14 @@ Put NX-FPS.elf to `/SaltySD/plugins`
 Currently supported graphics APIs:
 - NVN
 
-When game is booted, plugin outputs one file:
+When game is booted, plugin outputs two files:
 ```
 /SaltySD/FPSoffset.hex
+/SaltySD/FPSavgoffset.hex
 ```
 
-There is stored address where you can find PFPS, FPS has address `PFPS - 0x8`.
-If files is already there, it's rewritten by new address with each new game boot.
+There are stored pointers where you can find PFPS (FPSoffset.hex) and FPS (FPSavgoffset.hex).
+If files are already there, they are rewritten by new pointers with each new game boot.
 
 To show it on display, you can use Status Monitor Overlay >=0.4
 https://github.com/masagrator/Status-Monitor-Overlay
@@ -29,11 +30,11 @@ Not working games with this plugin (You can find games not compatible with Salty
 | Title | Version(s) | Why? |
 | ------------- | ------------- | ------------- |
 | LAYTON'S MYSTERY JOURNEY: Katrielle and the Millionaires' Conspiracy | all | Different graphics API (OpenGL/EGL) |
-| Mosaic | all | ? (not checked) |
+| Mosaic | all | Not using nvnQueuePresentTexture to push frames (reason unknown) |
 | The Talos Principle | all | Different graphics API, for FPS counter check [here](https://gbatemp.net/threads/the-talos-principle-graphics-settings.555045/) |
 | The Unholy Society | all | Different graphics API (OpenGL/EGL) |
 
 # Troubleshooting
 Q: Why I got constantly 255?
 
-A: 255 is default value before plugin starts counting frames. This may be a sign that game is using different API. Make an issue and state name of game. Next updates will include support for other graphics APIs.
+A: 255 is default value before plugin starts counting frames. This may be a sign that game is using different API or function that is supported. Make an issue and state name of game. Next updates will include support for other graphics APIs.
