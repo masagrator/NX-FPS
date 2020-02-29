@@ -15,6 +15,7 @@ extern "C" {
 	void __libc_init_array(void);
 	extern u64 nvnBootstrapLoader(const char * nvnName) LINKABLE;
 	extern u64 _ZN2nn2os13GetSystemTickEv() LINKABLE;
+	extern void eglSwapBuffers(void* egl_unk1, void* egl_unk2) LINKABLE;
 }
 
 u32 __nx_applet_type = AppletType_None;
@@ -58,6 +59,34 @@ uintptr_t addr_nvnPresentTexture;
 float systemtickfrequency = 19200000;
 typedef void (*nvnQueuePresentTexture_0)(void* unk1_1, void* unk2_1, void* unk3_1);
 typedef uintptr_t (*GetProcAddress)(void* unk1_a, const char * nvnFunction_a);
+
+void eglSwap (void* egl_unk1_1, void* egl_unk2_1) {
+	static uint8_t FPS_temp = 0;
+	static uint64_t starttick = 0;
+	static uint64_t endtick = 0;
+	static uint64_t deltatick = 0;
+	static uint64_t frameend = 0;
+	static uint64_t framedelta = 0;
+	static uint64_t frameavg = 0;
+	
+	if (starttick == 0) starttick = _ZN2nn2os13GetSystemTickEv();
+	eglSwapBuffers(egl_unk1_1, egl_unk2_1);
+	endtick = _ZN2nn2os13GetSystemTickEv();
+	framedelta = endtick - frameend;
+	frameavg = ((9*frameavg) + framedelta) / 10;
+	FPSavg = systemtickfrequency / (float)frameavg;
+	frameend = endtick;
+	
+	FPS_temp++;
+	deltatick = endtick - starttick;
+	if (deltatick >= 19200000) {
+		starttick = _ZN2nn2os13GetSystemTickEv();
+		FPS = FPS_temp - 1;
+		FPS_temp = 0;
+	}
+	
+	return;
+}
 
 void nvnPresentTexture(void* unk1, void* unk2, void* unk3) {
 	static uint8_t FPS_temp = 0;
@@ -116,5 +145,6 @@ int main(int argc, char *argv[]) {
 	SaltySDCore_fwrite(&addr_FPS, 0x5, 1, offset);
 	SaltySDCore_fclose(offset);
 	SaltySDCore_ReplaceImport("nvnBootstrapLoader", &nvnBootstrapLoader_1);
+	SaltySDCore_ReplaceImport("eglSwapBuffers", &eglSwap);
 	SaltySD_printf("NX-FPS: injection finished\n");
 }
