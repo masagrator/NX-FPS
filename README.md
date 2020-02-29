@@ -35,7 +35,6 @@ Not working games with this plugin (You can find games not compatible with Salty
 | Title | Version(s) | Why? |
 | ------------- | ------------- | ------------- |
 | LAYTON'S MYSTERY JOURNEY: Katrielle and the Millionaires' Conspiracy | all | Different graphics API (OpenGL/EGL) |
-| Mosaic | all | Not using nvnQueuePresentTexture to push frames (reason unknown) |
 | The Talos Principle | all | Different graphics API, for FPS counter check [here](https://gbatemp.net/threads/the-talos-principle-graphics-settings.555045/) |
 | The Unholy Society | all | Different graphics API (OpenGL/EGL) |
 
