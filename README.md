@@ -8,14 +8,13 @@ Put NX-FPS.elf to `/SaltySD/plugins`
 Currently supported graphics APIs:
 - NVN
 
-When game is booted, plugin outputs two files:
+When game is booted, plugin outputs one file:
 ```
 /SaltySD/FPSoffset.hex
-/SaltySD/FPSavgoffset.hex
 ```
 
-There are stored pointers where you can find PFPS (FPSoffset.hex) and FPS (FPSavgoffset.hex).
-If files are already there, they are rewritten by new pointers with each new game boot.
+There is stored address, where you can find PFPS, FPS has address `PFPS - 0x8`.
+If file is already there, it's rewritten by new address with each new game boot.
 
 To show it on display, you can use Status Monitor Overlay >=0.4
 https://github.com/masagrator/Status-Monitor-Overlay
