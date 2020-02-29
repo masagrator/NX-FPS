@@ -8,7 +8,7 @@ Put NX-FPS.elf to `/SaltySD/plugins`
 Currently supported graphics APIs:
 - NVN
 
-When game is booted, plugin outputs two file:
+When game is booted, plugin outputs one file:
 ```
 /SaltySD/FPSoffset.hex
 ```
