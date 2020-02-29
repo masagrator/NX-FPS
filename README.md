@@ -41,5 +41,5 @@ A: 255 is default value before plugin starts counting frames. This may be a sign
 # Thanks to:
 
 - RetroNX channel for help with coding stuff,
-- CTCaer who was convincing me to the end that I should target high precision,
+- CTCaer for providing many useful informations and convincing me to the end that I should target high precision,
 - Herbaciarz for providing video footage.
