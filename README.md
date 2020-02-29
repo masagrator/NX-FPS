@@ -14,7 +14,7 @@ When game is booted, plugin outputs one file:
 ```
 
 There is stored address where you can find PFPS, FPS has address `PFPS - 0x8`.
-If files is already there, it's rewritten by new pointer with each new game boot.
+If files is already there, it's rewritten by new address with each new game boot.
 
 To show it on display, you can use Status Monitor Overlay >=0.4
 https://github.com/masagrator/Status-Monitor-Overlay
