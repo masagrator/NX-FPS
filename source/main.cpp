@@ -55,7 +55,6 @@ uintptr_t ptr_nvnDeviceGetProcAddress;
 uintptr_t ptr_nvnQueuePresentTexture;
 uintptr_t addr_nvnGetProcAddress;
 uintptr_t addr_nvnPresentTexture;
-char FPS_c[8];
 float systemtickfrequency = 19200000;
 typedef void (*nvnQueuePresentTexture_0)(void* unk1_1, void* unk2_1, void* unk3_1);
 typedef uintptr_t (*GetProcAddress)(void* unk1_a, const char * nvnFunction_a);
