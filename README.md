@@ -15,13 +15,15 @@ When game is booted, plugin outputs one file:
 
 There is stored address, where you can find PFPS, FPS has address `PFPS - 0x8`.
 
->PFPS - Pushed Frames Per Second, it counts how many frames were actually pushed to display in second that passed.
->FPS - Frames Per Second caculated from averaged frametime.
+>PFPS - Pushed Frames Per Second (u8), it counts how many frames were actually pushed to display in second that passed.
+>FPS - Frames Per Second (float) caculated from averaged frametime.
 
 If file is already there, it's rewritten by new address with each new game boot.
 
 To show it on display, you can use Status Monitor Overlay >=0.4
 https://github.com/masagrator/Status-Monitor-Overlay
+
+You can also make your own homebrew to use this plugin.
 
 >WARNING
 
