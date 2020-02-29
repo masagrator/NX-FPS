@@ -40,7 +40,7 @@ Not working games with this plugin (You can find games not compatible with Salty
 # Troubleshooting
 Q: Why I got constantly 255?
 
-A: 255 is default value before plugin starts counting frames. This may be a sign that game is using different API or function that is supported. Make an issue and state name of game. Next updates will include support for other graphics APIs.
+A: 255 is default value before plugin starts counting frames. This may be a sign that game is using different API or function than what is currently supported. Make an issue and state name of game. Next updates will include support for other graphics APIs.
 
 # Thanks to:
 
