@@ -17,6 +17,7 @@ When game is booted, plugin outputs one file:
 There is stored address, where you can find PFPS, FPS has address `PFPS - 0x8`.
 
 >PFPS - Pushed Frames Per Second (u8), it counts how many frames were actually pushed to display in second that passed.
+>
 >FPS - Frames Per Second (float) caculated from averaged frametime, refreshed with each new frame.
 
 If file is already there, it's rewritten by new address with each new game boot.
