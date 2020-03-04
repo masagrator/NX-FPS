@@ -136,14 +136,14 @@ uintptr_t nvnBootstrapLoader_1(const char* nvnName) {
 }
 
 int main(int argc, char *argv[]) {
-	uint64_t addr_FPS;
 	SaltySD_printf("NX-FPS: alive\n");
-	addr_nvnGetProcAddress = &nvnGetProcAddress;
-	addr_nvnPresentTexture = &nvnPresentTexture;
+	uint64_t addr_FPS;
 	addr_FPS = &FPS;
 	FILE* offset = SaltySDCore_fopen("sdmc:/SaltySD/FPSoffset.hex", "wb");
 	SaltySDCore_fwrite(&addr_FPS, 0x5, 1, offset);
 	SaltySDCore_fclose(offset);
+	addr_nvnGetProcAddress = &nvnGetProcAddress;
+	addr_nvnPresentTexture = &nvnPresentTexture;
 	SaltySDCore_ReplaceImport("nvnBootstrapLoader", &nvnBootstrapLoader_1);
 	SaltySDCore_ReplaceImport("eglSwapBuffers", &eglSwap);
 	SaltySD_printf("NX-FPS: injection finished\n");
