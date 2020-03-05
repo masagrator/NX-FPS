@@ -137,8 +137,7 @@ uintptr_t nvnBootstrapLoader_1(const char* nvnName) {
 
 int main(int argc, char *argv[]) {
 	SaltySD_printf("NX-FPS: alive\n");
-	uint64_t addr_FPS;
-	addr_FPS = &FPS;
+	uint64_t addr_FPS = &FPS;
 	FILE* offset = SaltySDCore_fopen("sdmc:/SaltySD/FPSoffset.hex", "wb");
 	SaltySDCore_fwrite(&addr_FPS, 0x5, 1, offset);
 	SaltySDCore_fclose(offset);
