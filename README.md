@@ -44,6 +44,7 @@ Q: Why I got constantly 255?
 A: 255 is default value before plugin starts counting frames. This may be a sign that:
 * Game is using different API or function than what is currently supported
 * Plugin missed symbol when initializing (for whatever reason)
+
 Try first to run game again few times. If it's still 255, make an issue and state name of game. Next updates will include support for other graphics APIs.
 
 # Thanks to:
