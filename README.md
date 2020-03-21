@@ -8,6 +8,7 @@ Put NX-FPS.elf to `/SaltySD/plugins`
 Currently supported graphics APIs:
 - NVN
 - EGL
+- Vulkan
 
 When game is booted, plugin outputs one file:
 ```
@@ -36,7 +37,6 @@ Plugin brings some instability to boot process for some games. It is recommended
 Not working games with this plugin (You can find games not compatible with SaltyNX [here](https://github.com/masagrator/SaltyNX/blob/master/README.md))
 | Title | Version(s) | Why? |
 | ------------- | ------------- | ------------- |
-| The Talos Principle | all | SaltyNX issue, for FPS counter check [here](https://gbatemp.net/threads/the-talos-principle-graphics-settings.555045/) |
 
 # Troubleshooting
 Q: Why I got constantly 255?
