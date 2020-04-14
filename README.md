@@ -37,7 +37,6 @@ Plugin brings some instability to boot process for some games. It is recommended
 Not working games with this plugin (You can find games not compatible with SaltyNX [here](https://github.com/masagrator/SaltyNX/blob/master/README.md))
 | Title | Version(s) | Why? |
 | ------------- | ------------- | ------------- |
-| Grandia HD Collection | All versions | Game menu is 64-bit, but after choosing game 32-bit main is loaded |
 
 # Troubleshooting
 Q: Why I got constantly 255?
