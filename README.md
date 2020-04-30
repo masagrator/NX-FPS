@@ -37,6 +37,7 @@ Plugin brings some instability to boot process for some games. It is recommended
 Not working games with this plugin (You can find games not compatible with SaltyNX [here](https://github.com/masagrator/SaltyNX/blob/master/README.md))
 | Title | Version(s) | Why? |
 | ------------- | ------------- | ------------- |
+| Final Fantasy X/X-2 | all | Framework stuff is included in NROs which SaltyNX doesn't support |
 
 # Troubleshooting
 Q: Why I got constantly 255?
