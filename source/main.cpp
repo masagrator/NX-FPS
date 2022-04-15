@@ -23,6 +23,9 @@ u32 __nx_applet_type = AppletType_None;
 Handle orig_main_thread;
 void* orig_ctx;
 void* orig_saved_lr;
+SharedMemory _sharedmemory = {};
+Handle remoteSharedMemory = 0;
+ptrdiff_t SharedMemoryOffset = 0;
 
 void __libnx_init(void* ctx, Handle main_thread, void* saved_lr) {
 	extern char* fake_heap_start;
@@ -51,6 +54,8 @@ void __attribute__((weak)) NORETURN __libnx_exit(int rc) {
 	while (true);
 }
 
+uint8_t* FPS_shared = 0;
+float* FPSavg_shared = 0;
 uint8_t FPS = 0xFF;
 float FPSavg = 255;
 uintptr_t ptr_nvnDeviceGetProcAddress;
@@ -69,6 +74,7 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 	static uint64_t frameend = 0;
 	static uint64_t framedelta = 0;
 	static uint64_t frameavg = 0;
+	static bool sharedInitialized = false;
 	
 	if (starttick == 0) starttick = _ZN2nn2os13GetSystemTickEv();
 	uint32_t vulkanResult = vkQueuePresentKHR(vk_unk1_1, vk_unk2_1);
@@ -85,6 +91,19 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 		FPS = FPS_temp - 1;
 		FPS_temp = 0;
 	}
+
+	if (!sharedInitialized && (remoteSharedMemory != 0)) {
+		shmemLoadRemote(&_sharedmemory, remoteSharedMemory, 0x1000, Perm_Rw);
+		if (!shmemMap(&_sharedmemory)) {
+			FPS_shared = (uint8_t*)shmemGetAddr(&_sharedmemory);
+			FPSavg_shared = (float*)(FPSavg_shared + 1);
+			sharedInitialized = true;
+		}
+	}
+	else if (sharedInitialized) {
+		*FPS_shared = FPS;
+		*FPSavg_shared = FPSavg;
+	}
 	
 	return vulkanResult;
 }
@@ -97,6 +116,7 @@ void eglSwap (void* egl_unk1_1, void* egl_unk2_1) {
 	static uint64_t frameend = 0;
 	static uint64_t framedelta = 0;
 	static uint64_t frameavg = 0;
+	static bool sharedInitialized = false;
 	
 	if (starttick == 0) starttick = _ZN2nn2os13GetSystemTickEv();
 	eglSwapBuffers(egl_unk1_1, egl_unk2_1);
@@ -114,6 +134,19 @@ void eglSwap (void* egl_unk1_1, void* egl_unk2_1) {
 		FPS_temp = 0;
 	}
 	
+	if (!sharedInitialized && (remoteSharedMemory != 0)) {
+		shmemLoadRemote(&_sharedmemory, remoteSharedMemory, 0x1000, Perm_Rw);
+		if (!shmemMap(&_sharedmemory)) {
+			FPS_shared = (uint8_t*)shmemGetAddr(&_sharedmemory);
+			FPSavg_shared = (float*)(FPSavg_shared + 1);
+			sharedInitialized = true;
+		}
+	}
+	else if (sharedInitialized) {
+		*FPS_shared = FPS;
+		*FPSavg_shared = FPSavg;
+	}
+
 	return;
 }
 
@@ -125,6 +158,7 @@ void nvnPresentTexture(void* unk1, void* unk2, void* unk3) {
 	static uint64_t frameend = 0;
 	static uint64_t framedelta = 0;
 	static uint64_t frameavg = 0;
+	static bool sharedInitialized = false;
 	
 	if (starttick == 0) starttick = _ZN2nn2os13GetSystemTickEv();
 	((nvnQueuePresentTexture_0)(ptr_nvnQueuePresentTexture))(unk1, unk2, unk3);
@@ -140,6 +174,19 @@ void nvnPresentTexture(void* unk1, void* unk2, void* unk3) {
 		starttick = _ZN2nn2os13GetSystemTickEv();
 		FPS = FPS_temp - 1;
 		FPS_temp = 0;
+	}
+
+	if (!sharedInitialized && (remoteSharedMemory != 0)) {
+		shmemLoadRemote(&_sharedmemory, remoteSharedMemory, 0x1000, Perm_Rw);
+		if (!shmemMap(&_sharedmemory)) {
+			FPS_shared = (uint8_t*)shmemGetAddr(&_sharedmemory);
+			FPSavg_shared = (float*)(FPSavg_shared + 1);
+			sharedInitialized = true;
+		}
+	}
+	else if (sharedInitialized) {
+		*FPS_shared = FPS;
+		*FPSavg_shared = FPSavg;
 	}
 	
 	return;
@@ -166,9 +213,10 @@ uintptr_t nvnBootstrapLoader_1(const char* nvnName) {
 
 int main(int argc, char *argv[]) {
 	SaltySD_printf("NX-FPS: alive\n");
-	uint64_t addr_FPS = (uint64_t)&FPS;
+	uint64_t to_write = (uint64_t)&FPS;
 	FILE* offset = SaltySDCore_fopen("sdmc:/SaltySD/FPSoffset.hex", "wb");
-	SaltySDCore_fwrite(&addr_FPS, 0x5, 1, offset);
+	SaltySDCore_fwrite(&to_write, 0x5, 1, offset);
+	SaltySD_GetSharedMemory(&remoteSharedMemory, &SharedMemoryOffset, 5);
 	SaltySDCore_fclose(offset);
 	addr_nvnGetProcAddress = (uint64_t)&nvnGetProcAddress;
 	addr_nvnPresentTexture = (uint64_t)&nvnPresentTexture;
