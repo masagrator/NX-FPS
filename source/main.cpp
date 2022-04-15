@@ -216,7 +216,8 @@ int main(int argc, char *argv[]) {
 	uint64_t to_write = (uint64_t)&FPS;
 	FILE* offset = SaltySDCore_fopen("sdmc:/SaltySD/FPSoffset.hex", "wb");
 	SaltySDCore_fwrite(&to_write, 0x5, 1, offset);
-	SaltySD_GetSharedMemory(&remoteSharedMemory, &SharedMemoryOffset, 5);
+	SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 5);
+	SaltySD_GetSharedMemoryHandle(&remoteSharedMemory);
 	SaltySDCore_fclose(offset);
 	addr_nvnGetProcAddress = (uint64_t)&nvnGetProcAddress;
 	addr_nvnPresentTexture = (uint64_t)&nvnPresentTexture;
