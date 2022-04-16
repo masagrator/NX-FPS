@@ -49,7 +49,7 @@ void __attribute__((weak)) NORETURN __libnx_exit(int rc) {
 	//void __libc_fini_array(void);
 	__libc_fini_array();
 
-	SaltySD_printf("SaltySD Plugin: jumping to %p\n", orig_saved_lr);
+	SaltySDCore_printf("SaltySD Plugin: jumping to %p\n", orig_saved_lr);
 
 	__nx_exit(0, orig_saved_lr);
 	while (true);
@@ -191,13 +191,9 @@ uintptr_t nvnBootstrapLoader_1(const char* nvnName) {
 }
 
 int main(int argc, char *argv[]) {
-	SaltySD_printf("NX-FPS: alive\n");
-	uint64_t to_write = (uint64_t)&FPS;
-	FILE* offset = SaltySDCore_fopen("sdmc:/SaltySD/FPSoffset.hex", "wb");
-	SaltySDCore_fwrite(&to_write, 0x5, 1, offset);
+	SaltySDCore_printf("NX-FPS: alive\n");
 	SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 6);
 	SaltySD_GetSharedMemoryHandle(&remoteSharedMemory);
-	SaltySDCore_fclose(offset);
 	shmemLoadRemote(&_sharedmemory, remoteSharedMemory, 0x1000, Perm_Rw);
 	if (!shmemMap(&_sharedmemory)) {
 		FPS_shared = (uint8_t*)shmemGetAddr(&_sharedmemory);
@@ -210,5 +206,5 @@ int main(int argc, char *argv[]) {
 	SaltySDCore_ReplaceImport("nvnBootstrapLoader", (void*)nvnBootstrapLoader_1);
 	SaltySDCore_ReplaceImport("eglSwapBuffers", (void*)eglSwap);
 	SaltySDCore_ReplaceImport("vkQueuePresentKHR", (void*)vulkanSwap);
-	SaltySD_printf("NX-FPS: injection finished\n");
+	SaltySDCore_printf("NX-FPS: injection finished\n");
 }
