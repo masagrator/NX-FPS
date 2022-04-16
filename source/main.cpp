@@ -57,6 +57,7 @@ void __attribute__((weak)) NORETURN __libnx_exit(int rc) {
 
 uint8_t* FPS_shared = 0;
 float* FPSavg_shared = 0;
+bool* pluginActive = 0;
 uint8_t FPS = 0xFF;
 float FPSavg = 255;
 uintptr_t ptr_nvnDeviceGetProcAddress;
@@ -96,6 +97,7 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 	if (sharedInitialized) {
 		*FPS_shared = FPS;
 		*FPSavg_shared = FPSavg;
+		*pluginActive = true;
 	}
 	
 	return vulkanResult;
@@ -129,6 +131,7 @@ void eglSwap (void* egl_unk1_1, void* egl_unk2_1) {
 	if (sharedInitialized) {
 		*FPS_shared = FPS;
 		*FPSavg_shared = FPSavg;
+		*pluginActive = true;
 	}
 
 	return;
@@ -162,6 +165,7 @@ void nvnPresentTexture(void* unk1, void* unk2, void* unk3) {
 	if (sharedInitialized) {
 		*FPS_shared = FPS;
 		*FPSavg_shared = FPSavg;
+		*pluginActive = true;
 	}
 	
 	return;
@@ -191,13 +195,14 @@ int main(int argc, char *argv[]) {
 	uint64_t to_write = (uint64_t)&FPS;
 	FILE* offset = SaltySDCore_fopen("sdmc:/SaltySD/FPSoffset.hex", "wb");
 	SaltySDCore_fwrite(&to_write, 0x5, 1, offset);
-	SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 5);
+	SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 6);
 	SaltySD_GetSharedMemoryHandle(&remoteSharedMemory);
 	SaltySDCore_fclose(offset);
 	shmemLoadRemote(&_sharedmemory, remoteSharedMemory, 0x1000, Perm_Rw);
 	if (!shmemMap(&_sharedmemory)) {
 		FPS_shared = (uint8_t*)shmemGetAddr(&_sharedmemory);
 		FPSavg_shared = (float*)(FPS_shared + 1);
+		pluginActive = (bool*)(FPS_shared + 5);
 		sharedInitialized = true;
 	}
 	addr_nvnGetProcAddress = (uint64_t)&nvnGetProcAddress;
