@@ -196,11 +196,12 @@ int main(int argc, char *argv[]) {
 	SaltySD_GetSharedMemoryHandle(&remoteSharedMemory);
 	shmemLoadRemote(&_sharedmemory, remoteSharedMemory, 0x1000, Perm_Rw);
 	if (!shmemMap(&_sharedmemory)) {
-		uint32_t* MAGIC = (uint32_t*)shmemGetAddr(&_sharedmemory);
+		uintptr_t base = (uintptr_t)shmemGetAddr(&_sharedmemory) + SharedMemoryOffset;
+		uint32_t* MAGIC = (uint32_t*)base;
 		*MAGIC = 0x465053;
-		FPS_shared = (uint8_t*)(MAGIC + SharedMemoryOffset + 4);
-		FPSavg_shared = (float*)(MAGIC + SharedMemoryOffset + 5);
-		pluginActive = (bool*)(MAGIC + SharedMemoryOffset + 9);
+		FPS_shared = (uint8_t*)(base + 4);
+		FPSavg_shared = (float*)(base + 5);
+		pluginActive = (bool*)(base + 9);
 		sharedInitialized = true;
 	}
 	addr_nvnGetProcAddress = (uint64_t)&nvnGetProcAddress;
