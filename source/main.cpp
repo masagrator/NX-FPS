@@ -192,17 +192,21 @@ uintptr_t nvnBootstrapLoader_1(const char* nvnName) {
 
 int main(int argc, char *argv[]) {
 	SaltySDCore_printf("NX-FPS: alive\n");
-	SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 10);
-	SaltySD_GetSharedMemoryHandle(&remoteSharedMemory);
-	shmemLoadRemote(&_sharedmemory, remoteSharedMemory, 0x1000, Perm_Rw);
-	if (!shmemMap(&_sharedmemory)) {
-		uintptr_t base = (uintptr_t)shmemGetAddr(&_sharedmemory) + SharedMemoryOffset;
-		uint32_t* MAGIC = (uint32_t*)base;
-		*MAGIC = 0x465053;
-		FPS_shared = (uint8_t*)(base + 4);
-		FPSavg_shared = (float*)(base + 5);
-		pluginActive = (bool*)(base + 9);
-		sharedInitialized = true;
+	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 10);
+	SaltySDCore_printf("NX-FPS: ret: 0x%X\n", ret);
+	if (!ret) {
+		SaltySDCore_printf("NX-FPS: MemoryOffset: %d\n", SharedMemoryOffset);
+		SaltySD_GetSharedMemoryHandle(&remoteSharedMemory);
+		shmemLoadRemote(&_sharedmemory, remoteSharedMemory, 0x1000, Perm_Rw);
+		if (!shmemMap(&_sharedmemory)) {
+			uintptr_t base = (uintptr_t)shmemGetAddr(&_sharedmemory) + SharedMemoryOffset;
+			uint32_t* MAGIC = (uint32_t*)base;
+			*MAGIC = 0x465053;
+			FPS_shared = (uint8_t*)(base + 4);
+			FPSavg_shared = (float*)(base + 5);
+			pluginActive = (bool*)(base + 9);
+			sharedInitialized = true;
+		}
 	}
 	addr_nvnGetProcAddress = (uint64_t)&nvnGetProcAddress;
 	addr_nvnPresentTexture = (uint64_t)&nvnPresentTexture;
