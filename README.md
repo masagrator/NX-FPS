@@ -10,7 +10,9 @@ Currently supported graphics APIs:
 - EGL
 - Vulkan
 
-To read FPS from plugin, I am providing instructions based on Status Monitor Overlay code:
+To read FPS from plugin you can use Status Monitor Overlay and write your own code.
+
+I am providing instructions based on Status Monitor Overlay code how to read it from your own homebrew:
 - To homebrew you need to include old ipc.h ([here](https://github.com/masagrator/ReverseNX-RT/blob/master/Overlay/include/ipc.h)) and SaltyNX.h ([here](https://github.com/masagrator/ReverseNX-RT/blob/master/Overlay/include/SaltyNX.h)).
 - We need to connect to SaltyNX SharedMemory by connecting to SaltyNX, retrieving SharedMemory handle, terminating connection with SaltyNX and assigning SharedMemory to homebrew.
 
