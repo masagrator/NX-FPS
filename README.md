@@ -10,7 +10,7 @@ Currently supported graphics APIs:
 - EGL
 - Vulkan
 
-To read FPS from plugin you can use Status Monitor Overlay and write your own code.
+To read FPS from plugin you can use [Status Monitor Overlay 0.8.1+](https://github.com/masagrator/Status-Monitor-Overlay) or write your own code.
 
 I am providing instructions based on Status Monitor Overlay code how to read it from your own homebrew:
 - To homebrew you need to include old ipc.h ([here](https://github.com/masagrator/ReverseNX-RT/blob/master/Overlay/include/ipc.h)) and SaltyNX.h ([here](https://github.com/masagrator/ReverseNX-RT/blob/master/Overlay/include/SaltyNX.h)).
@@ -111,11 +111,6 @@ if (rel_offset > -1) {
   *pluginActive = false;
 }
 ```
-
-To show it on display, you can use Status Monitor Overlay >=0.8.1
-https://github.com/masagrator/Status-Monitor-Overlay
-
-You can also make your own homebrew to use this plugin.
 
 >WARNING
 
