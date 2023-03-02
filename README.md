@@ -81,7 +81,8 @@ uint8_t* FPS_shared = 0;
 float* FPSavg_shared = 0;
 bool* pluginActive = 0;
 
-//Function searching for NX-FPS magic through SharedMemory
+//Function searching for NX-FPS magic through SharedMemory.
+//SaltyNX is page aligning any SharedMemory reservation request to 4, that's why we check every 4th byte for MAGIC.
 ptrdiff_t searchSharedMemoryBlock(uintptr_t base) {
 	ptrdiff_t search_offset = 0;
 	while(search_offset < 0x1000) {
