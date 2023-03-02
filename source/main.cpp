@@ -23,6 +23,9 @@ u32 __nx_applet_type = AppletType_None;
 Handle orig_main_thread;
 void* orig_ctx;
 void* orig_saved_lr;
+SharedMemory _sharedmemory = {};
+Handle remoteSharedMemory = 0;
+ptrdiff_t SharedMemoryOffset = 1234;
 
 void __libnx_init(void* ctx, Handle main_thread, void* saved_lr) {
 	extern char* fake_heap_start;
@@ -38,6 +41,7 @@ void __libnx_init(void* ctx, Handle main_thread, void* saved_lr) {
 	// Call constructors.
 	//void __libc_init_array(void);
 	__libc_init_array();
+	virtmemSetup();
 }
 
 void __attribute__((weak)) NORETURN __libnx_exit(int rc) {
@@ -45,12 +49,15 @@ void __attribute__((weak)) NORETURN __libnx_exit(int rc) {
 	//void __libc_fini_array(void);
 	__libc_fini_array();
 
-	SaltySD_printf("SaltySD Plugin: jumping to %p\n", orig_saved_lr);
+	SaltySDCore_printf("SaltySD Plugin: jumping to %p\n", orig_saved_lr);
 
 	__nx_exit(0, orig_saved_lr);
 	while (true);
 }
 
+uint8_t* FPS_shared = 0;
+float* FPSavg_shared = 0;
+bool* pluginActive = 0;
 uint8_t FPS = 0xFF;
 float FPSavg = 255;
 uintptr_t ptr_nvnDeviceGetProcAddress;
@@ -60,6 +67,7 @@ uintptr_t addr_nvnPresentTexture;
 float systemtickfrequency = 19200000;
 typedef void (*nvnQueuePresentTexture_0)(void* unk1_1, void* unk2_1, void* unk3_1);
 typedef uintptr_t (*GetProcAddress)(void* unk1_a, const char * nvnFunction_a);
+bool sharedInitialized = false;
 
 uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 	static uint8_t FPS_temp = 0;
@@ -84,6 +92,12 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 		starttick = _ZN2nn2os13GetSystemTickEv();
 		FPS = FPS_temp - 1;
 		FPS_temp = 0;
+	}
+
+	if (sharedInitialized) {
+		*FPS_shared = FPS;
+		*FPSavg_shared = FPSavg;
+		*pluginActive = true;
 	}
 	
 	return vulkanResult;
@@ -114,6 +128,12 @@ void eglSwap (void* egl_unk1_1, void* egl_unk2_1) {
 		FPS_temp = 0;
 	}
 	
+	if (sharedInitialized) {
+		*FPS_shared = FPS;
+		*FPSavg_shared = FPSavg;
+		*pluginActive = true;
+	}
+
 	return;
 }
 
@@ -141,6 +161,12 @@ void nvnPresentTexture(void* unk1, void* unk2, void* unk3) {
 		FPS = FPS_temp - 1;
 		FPS_temp = 0;
 	}
+
+	if (sharedInitialized) {
+		*FPS_shared = FPS;
+		*FPSavg_shared = FPSavg;
+		*pluginActive = true;
+	}
 	
 	return;
 }
@@ -165,15 +191,27 @@ uintptr_t nvnBootstrapLoader_1(const char* nvnName) {
 }
 
 int main(int argc, char *argv[]) {
-	SaltySD_printf("NX-FPS: alive\n");
-	uint64_t addr_FPS = (uint64_t)&FPS;
-	FILE* offset = SaltySDCore_fopen("sdmc:/SaltySD/FPSoffset.hex", "wb");
-	SaltySDCore_fwrite(&addr_FPS, 0x5, 1, offset);
-	SaltySDCore_fclose(offset);
+	SaltySDCore_printf("NX-FPS: alive\n");
+	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 10);
+	SaltySDCore_printf("NX-FPS: ret: 0x%X\n", ret);
+	if (!ret) {
+		SaltySDCore_printf("NX-FPS: MemoryOffset: %d\n", SharedMemoryOffset);
+		SaltySD_GetSharedMemoryHandle(&remoteSharedMemory);
+		shmemLoadRemote(&_sharedmemory, remoteSharedMemory, 0x1000, Perm_Rw);
+		if (!shmemMap(&_sharedmemory)) {
+			uintptr_t base = (uintptr_t)shmemGetAddr(&_sharedmemory) + SharedMemoryOffset;
+			uint32_t* MAGIC = (uint32_t*)base;
+			*MAGIC = 0x465053;
+			FPS_shared = (uint8_t*)(base + 4);
+			FPSavg_shared = (float*)(base + 5);
+			pluginActive = (bool*)(base + 9);
+			sharedInitialized = true;
+		}
+	}
 	addr_nvnGetProcAddress = (uint64_t)&nvnGetProcAddress;
 	addr_nvnPresentTexture = (uint64_t)&nvnPresentTexture;
 	SaltySDCore_ReplaceImport("nvnBootstrapLoader", (void*)nvnBootstrapLoader_1);
 	SaltySDCore_ReplaceImport("eglSwapBuffers", (void*)eglSwap);
 	SaltySDCore_ReplaceImport("vkQueuePresentKHR", (void*)vulkanSwap);
-	SaltySD_printf("NX-FPS: injection finished\n");
+	SaltySDCore_printf("NX-FPS: injection finished\n");
 }
