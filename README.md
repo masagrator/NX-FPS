@@ -13,7 +13,7 @@ Currently supported graphics APIs:
 To read FPS from plugin you can use [Status Monitor Overlay 0.8.1+](https://github.com/masagrator/Status-Monitor-Overlay) or write your own code.
 
 I am providing instructions based on Status Monitor Overlay code how to read it from your own homebrew:
-- To homebrew you need to include old ipc.h ([here](https://github.com/masagrator/ReverseNX-RT/blob/master/Overlay/include/ipc.h)) and SaltyNX.h ([here](https://github.com/masagrator/ReverseNX-RT/blob/master/Overlay/include/SaltyNX.h)).
+- You need to include old ipc.h ([here](https://github.com/masagrator/ReverseNX-RT/blob/master/Overlay/include/ipc.h)) and SaltyNX.h ([here](https://github.com/masagrator/ReverseNX-RT/blob/master/Overlay/include/SaltyNX.h)).
 - We need to connect to SaltyNX SharedMemory by connecting to SaltyNX, retrieving SharedMemory handle, terminating connection with SaltyNX and assigning SharedMemory to homebrew.
 
 Helper:
