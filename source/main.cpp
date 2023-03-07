@@ -192,8 +192,8 @@ int main(int argc, char *argv[]) {
 		SaltySDCore_printf("NX-FPS: MemoryOffset: %d\n", SharedMemoryOffset);
 		SaltySD_GetSharedMemoryHandle(&remoteSharedMemory);
 		shmemLoadRemote(&_sharedmemory, remoteSharedMemory, 0x1000, Perm_Rw);
-		ret = shmemMap(&_sharedmemory)
-		if (R_SUCCEEDED(rc)) {
+		ret = shmemMap(&_sharedmemory);
+		if (R_SUCCEEDED(ret)) {
 			uintptr_t base = (uintptr_t)shmemGetAddr(&_sharedmemory) + SharedMemoryOffset;
 			uint32_t* MAGIC = (uint32_t*)base;
 			*MAGIC = 0x465053;
