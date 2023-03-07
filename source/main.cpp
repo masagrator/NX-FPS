@@ -176,7 +176,7 @@ void nvnPresentTexture(void* _this, void* unk2, void* unk3) {
 
 	if (!starttick) starttick = _ZN2nn2os13GetSystemTickEv();
 	if (FPStiming) {
-		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < (FPStiming-7800)) {
+		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
 			svcSleepThread(100000);
 		}
 		((nvnQueuePresentTexture_0)(ptr_nvnQueuePresentTexture))(_this, unk2, unk3);
@@ -203,14 +203,17 @@ void nvnPresentTexture(void* _this, void* unk2, void* unk3) {
 	if (nvnWindow && FPSlock != *FPSlocked_shared) {
 		changeFPS = true;
 		changedFPS = false;
-		if (*FPSlocked_shared == 30) {
+		if (*FPSlocked_shared <= 30) {
 			nvnSetPresentInterval(nullptr, 2);
-			FPStiming = 0;
+			if (*FPSlocked_shared != 30) {
+				FPStiming = (19200000/(*FPSlocked_shared)) - 7800;
+			}
+			else FPStiming = 0;
 		}
 		else {
 			nvnSetPresentInterval(nullptr, 1);
 			if (*FPSlocked_shared != 60) {
-				FPStiming = 19200000/(*FPSlocked_shared);
+				FPStiming = (19200000/(*FPSlocked_shared)) - 7800;
 			}
 			else FPStiming = 0;
 		}
@@ -277,7 +280,7 @@ int main(int argc, char *argv[]) {
 			*MAGIC = 0x4B434F4C;
 			FPSlocked_shared = (uint8_t*)(base + 14);
 			FPSmode_shared = (uint8_t*)(base + 15);
-			*FPSlocked_shared = 45;
+			*FPSlocked_shared = 0;
 			addr_nvnSetPresentInterval = (uint64_t)&nvnSetPresentInterval;
 			addr_nvnAcquireTexture = (uint64_t)&nvnAcquireTexture;
 		}
