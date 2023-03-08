@@ -373,6 +373,14 @@ int main(int argc, char *argv[]) {
 				*ZeroSync_shared = (bool)temp;
 				SaltySDCore_fclose(file_dat);
 			}
+
+			u64 buildid = SaltySD_GetBID();
+			if (!buildid) {
+				SaltySDCore_printf("NX-FPS: getBID failed! Err: 0x%x\n", ret);
+			}
+			else {
+				SaltySDCore_printf("NX-FPS: BID: %016lX\n", buildid);
+			}
 		}
 		else {
 			SaltySDCore_printf("NX-FPS: shmemMap failed! Err: 0x%x\n", ret);
