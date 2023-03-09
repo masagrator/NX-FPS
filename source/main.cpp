@@ -4,7 +4,7 @@
 #include "saltysd/SaltySD_core.h"
 #include "ltoa.h"
 #include <cstdlib>
-#include <string_view>
+#include <string>
 
 extern "C" {
 	extern u32 __start__;
@@ -38,26 +38,26 @@ struct Patching {
 
 Patching* parsedConfig = 0;
 
-Result configSanityCheck(std::string_view config) {
-	if (config.find("[15 FPS]") == std::string_view::npos)
+Result configSanityCheck(std::string config) {
+	if (config.find("[15 FPS]") == std::string::npos)
 		return 1;
-	if (config.find("[20 FPS]") == std::string_view::npos)
+	if (config.find("[20 FPS]") == std::string::npos)
 		return 1;
-	if (config.find("[25 FPS]") == std::string_view::npos)
+	if (config.find("[25 FPS]") == std::string::npos)
 		return 1;
-	if (config.find("[30 FPS]") == std::string_view::npos)
+	if (config.find("[30 FPS]") == std::string::npos)
 		return 1;
-	if (config.find("[35 FPS]") == std::string_view::npos)
+	if (config.find("[35 FPS]") == std::string::npos)
 		return 1;
-	if (config.find("[40 FPS]") == std::string_view::npos)
+	if (config.find("[40 FPS]") == std::string::npos)
 		return 1;
-	if (config.find("[45 FPS]") == std::string_view::npos)
+	if (config.find("[45 FPS]") == std::string::npos)
 		return 1;
-	if (config.find("[50 FPS]") == std::string_view::npos)
+	if (config.find("[50 FPS]") == std::string::npos)
 		return 1;
-	if (config.find("[55 FPS]") == std::string_view::npos)
+	if (config.find("[55 FPS]") == std::string::npos)
 		return 1;
-	if (config.find("[60 FPS]") == std::string_view::npos)
+	if (config.find("[60 FPS]") == std::string::npos)
 		return 1;
 	return 0;
 }
@@ -71,11 +71,11 @@ Result readConfig(const char* path) {
 	char* buffer = (char*)calloc(1, filesize);
 	SaltySDCore_fread(buffer, filesize, 1, patch_file);
 	SaltySDCore_fclose(patch_file);
-	std::string_view text = buffer;
+	std::string text = buffer;
+	free(buffer);
 	if (configSanityCheck(text))
 		return 1;
 	parsedConfig = (Patching*)calloc(10, sizeof(Patching));
-	free(buffer);
 	return 0;
 }
 
