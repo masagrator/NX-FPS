@@ -25,8 +25,9 @@ extern "C" {
 struct PatchingEntry {
 	uint8_t addresses_count;
 	int* addresses;
-	char* value_type;
+	uint8_t value_type; //0 - err, 1 - int, 2 - float, 3 - double
 	double type_double;
+	float type_float;
 	uint64_t type_int;
 };
 
