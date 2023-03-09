@@ -4,6 +4,7 @@
 #include "saltysd/SaltySD_core.h"
 #include "ltoa.h"
 #include <cstdlib>
+#include <vector>
 
 extern "C" {
 	extern u32 __start__;
@@ -20,6 +21,21 @@ extern "C" {
 	extern void eglSwapBuffers(void* egl_unk1, void* egl_unk2) LINKABLE;
 	extern u32 vkQueuePresentKHR(void* vk_unk1, void* vk_unk2) LINKABLE;
 }
+
+struct PatchingEntry {
+	uint8_t addresses_count;
+	int* addresses;
+	char* value_type;
+	double type_double;
+	uint64_t type_int;
+};
+
+struct Patching {
+	uint8_t value_count;
+	PatchingEntry* entries;
+};
+
+std::vector<Patching> values_to_patch;
 
 u32 __nx_applet_type = AppletType_None;
 Handle orig_main_thread;
@@ -90,6 +106,26 @@ typedef void (*nvnSetPresentInterval_0)(void* _this, int mode);
 typedef void (*nvnBuilderSetPresentInterval_0)(void* _this, int mode);
 typedef void* (*nvnAcquireTexture_0)(void* _this, void* x1, int w2);
 typedef void* (*nvnSyncWait_0)(void* _this, uint64_t timeout_ns);
+
+inline void createBuildidPath(uint64_t buildid, char* titleid, char* buffer) {
+	strcpy(buffer, "sdmc:/SaltySD/plugins/FPSLocker/patches/0");
+	strcat(buffer, &titleid[0]);
+	strcat(buffer, "/");
+	ltoa(buildid, &titleid[0], 16);
+	if (strlen(&titleid[0]) < 16) {
+		size_t length = strlen(&titleid[0]);
+		int zero_count = 15 - length;
+		char* temp = (char*)calloc(1, 0x11);
+		strcpy(&temp[zero_count], &titleid[0]);
+		for (int i = 0; i < (zero_count + 1); i++) {
+			temp[i] = 0x30;
+		}
+		strncpy(&titleid[0], temp, 16);
+		free(temp);
+	}
+	strcat(buffer, &titleid[0]);
+	strcat(buffer, ".ini");	
+}
 
 inline void CheckTitleID(char* buffer) {
     uint64_t titid = 0;
@@ -360,7 +396,7 @@ int main(int argc, char *argv[]) {
 
 			char titleid[17];
 			CheckTitleID(&titleid[0]);
-			char path[64];
+			char path[128];
 			strcpy(&path[0], "sdmc:/SaltySD/plugins/FPSLocker/0");
 			strcat(&path[0], &titleid[0]);
 			strcat(&path[0], ".dat");
@@ -380,6 +416,13 @@ int main(int argc, char *argv[]) {
 			}
 			else {
 				SaltySDCore_printf("NX-FPS: BID: %016lX\n", buildid);
+				createBuildidPath(buildid, &titleid[0], &path[0]);
+				FILE* patch_file = SaltySDCore_fopen(path, "r");
+				if (patch_file) {
+					SaltySDCore_printf("NX-FPS: successfully opened BID path: %s\n", path);
+					SaltySDCore_fclose(patch_file);
+				}
+				SaltySDCore_printf("NX-FPS: Wrong BID path: %s\n", path);
 			}
 		}
 		else {
