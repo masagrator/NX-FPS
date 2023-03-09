@@ -144,7 +144,7 @@ Result configRead(PatchingEntry* codes, std::string config) {
 				else if (strncmp(buffer, "float", 5)) {
 					codes[i].value_type[type_itr] = 10;
 					char* end = 0;
-					codes[i].type_double[double_itr] = strtod(&buffer[7], &end);
+					codes[i].type_double[double_itr] = strtod(&buffer[6], &end);
 					float_itr += 1;
 					type_itr += 1;
 				}
