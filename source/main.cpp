@@ -109,10 +109,10 @@ Result configRead(PatchingEntry* codes, std::string config) {
 						}
 						y++;
 					}
-					if (y == 4) return 1;
+					if (y == 4) return 2;
 				}
 				pos = end;
-				end = config.find("\n", pos);
+				end = config.find("\n", pos) + 1;
 			}
 			if (int_count) codes[i].type_int = (int64_t*)calloc(int_count, sizeof(int64_t));
 			if (float_count) codes[i].type_float = (float*)calloc(int_count, sizeof(float));
@@ -121,7 +121,48 @@ Result configRead(PatchingEntry* codes, std::string config) {
 			pos = start;
 			end = config.find("\n", pos);
 
+			uint8_t address_itr = 0;
+			uint8_t type_itr = 0;
+			uint8_t int_itr = 0;
+			uint8_t float_itr = 0;
+			uint8_t double_itr = 0;
 
+			for (int x = 0; x < lines; x++) {
+				strncpy(buffer, &(config.c_str()[pos]), end - pos);
+				if (strncmp(buffer, "0x", 2)) {
+					codes[i].addresses_count[x] += 1;
+					codes[i].addresses[address_itr] = strtol(buffer, nullptr, 16);
+					address_itr += 1;
+				}
+				else if (strncmp(buffer, "double", 6)) {
+					codes[i].value_type[type_itr] = 11;
+					char* end = 0;
+					codes[i].type_double[double_itr] = strtod(&buffer[7], &end);
+					double_itr += 1;
+					type_itr += 1;
+				}
+				else if (strncmp(buffer, "float", 5)) {
+					codes[i].value_type[type_itr] = 10;
+					char* end = 0;
+					codes[i].type_double[double_itr] = strtod(&buffer[7], &end);
+					float_itr += 1;
+					type_itr += 1;
+				}
+				else {
+					int y = 0;
+					while (y < 4) {
+						if (!strncmp(buffer, FPS_types[y], strlen(FPS_types[y]))) {
+								codes[i].value_type[type_itr] = y+1;
+								codes[i].type_int[int_itr] = strtol(buffer, nullptr, 16);
+								type_itr += 1;
+								int_itr += 1;
+								break;
+							}
+						y++;
+					}
+					if (y == 4) return 3;
+				}
+			}
 		}
 	}
 	return 0;
