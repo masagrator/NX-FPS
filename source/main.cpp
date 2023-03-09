@@ -5,6 +5,8 @@
 #include "ltoa.h"
 #include <cstdlib>
 #include <string>
+#include <array>
+#include <algorithm>
 
 extern "C" {
 	extern u32 __start__;
@@ -23,42 +25,105 @@ extern "C" {
 }
 
 struct PatchingEntry {
-	uint8_t addresses_count;
+	uint8_t entries;
+	uint8_t* addresses_count;
 	int* addresses;
-	uint8_t value_type; //0 - err, 1 - int, 2 - float, 3 - double
-	double type_double;
-	float type_float;
-	uint64_t type_int;
+	uint8_t* value_type; //0 - err, 1 - int8, 2 - int16, 3 - int32, 4 - int64, 10 - float, 11 - double
+	double* type_double;
+	float* type_float;
+	int64_t* type_int;
 };
 
-struct Patching {
-	uint8_t value_count;
-	PatchingEntry* entries;
+std::array FPS_blocks {
+	"\n[15 FPS]\n",
+	"\n[20 FPS]\n",
+	"\n[25 FPS]\n",
+	"\n[30 FPS]\n",
+	"\n[35 FPS]\n",
+	"\n[40 FPS]\n",
+	"\n[45 FPS]\n",
+	"\n[50 FPS]\n",
+	"\n[55 FPS]\n",
+	"\n[60 FPS]\n",
+	"\n[END]"
 };
 
-Patching* parsedConfig = 0;
+std::array FPS_types {
+	"int8",
+	"int16",
+	"int32",
+	"int64",
+	"float",
+	"double"
+};
+
+PatchingEntry* parsedConfig = 0;
 
 Result configSanityCheck(std::string config) {
-	if (config.find("[15 FPS]") == std::string::npos)
-		return 1;
-	if (config.find("[20 FPS]") == std::string::npos)
-		return 1;
-	if (config.find("[25 FPS]") == std::string::npos)
-		return 1;
-	if (config.find("[30 FPS]") == std::string::npos)
-		return 1;
-	if (config.find("[35 FPS]") == std::string::npos)
-		return 1;
-	if (config.find("[40 FPS]") == std::string::npos)
-		return 1;
-	if (config.find("[45 FPS]") == std::string::npos)
-		return 1;
-	if (config.find("[50 FPS]") == std::string::npos)
-		return 1;
-	if (config.find("[55 FPS]") == std::string::npos)
-		return 1;
-	if (config.find("[60 FPS]") == std::string::npos)
-		return 1;
+	for (size_t i = 0; i < std::size(FPS_blocks); i++)
+		if (config.find(FPS_blocks[i]) == std::string::npos)
+			return 1;
+	return 0;
+}
+
+Result configRead(PatchingEntry* codes, std::string config) {
+	size_t pos = 0;
+	size_t end = 1;
+	char* buffer = (char*)calloc(1, 32);
+	for (size_t i = 0; i < (std::size(FPS_blocks) - 1); i++) {
+		if ((pos = config.find(FPS_blocks[i])) != std::string::npos) {
+			pos += 10;
+			size_t start = pos;
+			end = config.find(FPS_blocks[i+1], pos);
+			if (!i) {
+				strncpy(buffer, &(config.c_str()[pos]), end - pos);
+				if (strncmp(buffer, "0x", 2))
+					return 1;
+			}
+			auto lines = std::count(&(config.c_str()[pos]), &(config.c_str()[end]), '\n');
+			auto all_address_count = std::count<const char*, uint16_t>(&(config.c_str()[pos]), &(config.c_str()[end]), 12408);
+			codes[i].entries = lines - all_address_count;
+			codes[i].addresses_count = (uint8_t*)calloc(lines - all_address_count, sizeof(uint8_t));
+			codes[i].addresses = (int*)calloc(all_address_count, sizeof(int));
+			codes[i].value_type = (uint8_t*)calloc(lines - all_address_count, sizeof(uint8_t));
+			
+			size_t int_count = 0;
+			size_t float_count = 0;
+			size_t double_count = 0;
+			for (int x = 0; x < lines; x++) {
+				strncpy(buffer, &(config.c_str()[pos]), end - pos);
+				if (strncmp(buffer, "0x", 2)) {
+					if (!strncmp(buffer, "float", 5)) {
+						float_count += 1;
+						continue;
+					}
+					else if (!strncmp(buffer, "double", 6)) {
+						double_count += 1;
+						continue;
+					}
+					size_t y = 0;
+					while(y < 4) {
+						if (!strncmp(buffer, FPS_types[y], strlen(FPS_types[y]))) {
+							int_count += 1;
+							break;
+						}
+						y++;
+					}
+					if (y == 4) return 1;
+				}
+				pos = end;
+				end = config.find("\n", pos);
+			}
+			if (int_count) codes[i].type_int = (int64_t*)calloc(int_count, sizeof(int64_t));
+			if (float_count) codes[i].type_float = (float*)calloc(int_count, sizeof(float));
+			if (double_count) codes[i].type_double = (double*)calloc(int_count, sizeof(double));
+
+			pos = start;
+			end = config.find("\n", pos);
+
+
+		}
+	}
 	return 0;
 }
 
@@ -75,7 +140,8 @@ Result readConfig(const char* path) {
 	free(buffer);
 	if (configSanityCheck(text))
 		return 1;
-	parsedConfig = (Patching*)calloc(10, sizeof(Patching));
+	parsedConfig = (PatchingEntry*)calloc(10, sizeof(PatchingEntry));
+	configRead(parsedConfig, text);
 	return 0;
 }
 
@@ -464,6 +530,7 @@ int main(int argc, char *argv[]) {
 					SaltySDCore_fclose(patch_file);
 					SaltySDCore_printf("NX-FPS: successfully opened BID path: %s\n", path);
 					Result rc = readConfig(path);
+					SaltySDCore_printf("NX-FPS: readConfig rc: %d\n", rc);
 				}
 				SaltySDCore_printf("NX-FPS: Wrong BID path: %s\n", path);
 			}
