@@ -4,7 +4,6 @@
 #include "saltysd/SaltySD_core.h"
 #include "ltoa.h"
 #include <cstdlib>
-#include <vector>
 #include <string_view>
 
 extern "C" {
@@ -37,7 +36,7 @@ struct Patching {
 	PatchingEntry* entries;
 };
 
-std::vector<Patching> values_to_patch;
+Patching* parsedConfig = 0;
 
 Result configSanityCheck(std::string_view config) {
 	if (config.find("[15 FPS]") == std::string_view::npos)
@@ -63,7 +62,7 @@ Result configSanityCheck(std::string_view config) {
 	return 0;
 }
 
-Result readConfig(const char* path, std::vector<Patching> vector) {
+Result readConfig(const char* path) {
 	FILE* patch_file = SaltySDCore_fopen(path, "rb");
 	SaltySDCore_fseek(patch_file, 0, 2);
 	size_t filesize = SaltySDCore_ftell(patch_file);
@@ -74,7 +73,9 @@ Result readConfig(const char* path, std::vector<Patching> vector) {
 	SaltySDCore_fclose(patch_file);
 	std::string_view text = buffer;
 	free(buffer);
-	configSanityCheck(text);
+	if (configSanityCheck(text))
+		return 1;
+	parsedConfig = (Patching*)calloc(10, sizeof(Patching));
 	return 0;
 }
 
@@ -462,7 +463,7 @@ int main(int argc, char *argv[]) {
 				if (patch_file) {
 					SaltySDCore_fclose(patch_file);
 					SaltySDCore_printf("NX-FPS: successfully opened BID path: %s\n", path);
-					Result rc = readConfig(path, values_to_patch);
+					Result rc = readConfig(path);
 				}
 				SaltySDCore_printf("NX-FPS: Wrong BID path: %s\n", path);
 			}
