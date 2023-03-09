@@ -5,6 +5,7 @@
 #include "ltoa.h"
 #include <cstdlib>
 #include <vector>
+#include <string_view>
 
 extern "C" {
 	extern u32 __start__;
@@ -37,6 +38,45 @@ struct Patching {
 };
 
 std::vector<Patching> values_to_patch;
+
+Result configSanityCheck(std::string_view config) {
+	if (config.find("[15 FPS]") == std::string_view::npos)
+		return 1;
+	if (config.find("[20 FPS]") == std::string_view::npos)
+		return 1;
+	if (config.find("[25 FPS]") == std::string_view::npos)
+		return 1;
+	if (config.find("[30 FPS]") == std::string_view::npos)
+		return 1;
+	if (config.find("[35 FPS]") == std::string_view::npos)
+		return 1;
+	if (config.find("[40 FPS]") == std::string_view::npos)
+		return 1;
+	if (config.find("[45 FPS]") == std::string_view::npos)
+		return 1;
+	if (config.find("[50 FPS]") == std::string_view::npos)
+		return 1;
+	if (config.find("[55 FPS]") == std::string_view::npos)
+		return 1;
+	if (config.find("[60 FPS]") == std::string_view::npos)
+		return 1;
+	return 0;
+}
+
+Result readConfig(const char* path, std::vector<Patching> vector) {
+	FILE* patch_file = SaltySDCore_fopen(path, "rb");
+	SaltySDCore_fseek(patch_file, 0, 2);
+	size_t filesize = SaltySDCore_ftell(patch_file);
+	SaltySDCore_fclose(patch_file);
+	patch_file = SaltySDCore_fopen(path, "r");
+	char* buffer = (char*)calloc(1, filesize);
+	SaltySDCore_fread(buffer, filesize, 1, patch_file);
+	SaltySDCore_fclose(patch_file);
+	std::string_view text = buffer;
+	free(buffer);
+	configSanityCheck(text);
+	return 0;
+}
 
 u32 __nx_applet_type = AppletType_None;
 Handle orig_main_thread;
@@ -420,8 +460,9 @@ int main(int argc, char *argv[]) {
 				createBuildidPath(buildid, &titleid[0], &path[0]);
 				FILE* patch_file = SaltySDCore_fopen(path, "r");
 				if (patch_file) {
-					SaltySDCore_printf("NX-FPS: successfully opened BID path: %s\n", path);
 					SaltySDCore_fclose(patch_file);
+					SaltySDCore_printf("NX-FPS: successfully opened BID path: %s\n", path);
+					Result rc = readConfig(path, values_to_patch);
 				}
 				SaltySDCore_printf("NX-FPS: Wrong BID path: %s\n", path);
 			}
