@@ -72,10 +72,10 @@ Result readConfig(const char* path) {
 	SaltySDCore_fread(buffer, filesize, 1, patch_file);
 	SaltySDCore_fclose(patch_file);
 	std::string_view text = buffer;
-	free(buffer);
 	if (configSanityCheck(text))
 		return 1;
 	parsedConfig = (Patching*)calloc(10, sizeof(Patching));
+	free(buffer);
 	return 0;
 }
 
