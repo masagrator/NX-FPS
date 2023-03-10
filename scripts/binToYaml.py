@@ -11,7 +11,7 @@ def GetCompareType(file):
 	compare_type -= 1
 	return compares[compare_type]
 
-def GetValue(file, type: str):
+def GetCompareValue(file, type: str):
 	match(type):
 		case "uint8":
 			return int.from_bytes(file.read(1), "little")
@@ -33,6 +33,56 @@ def GetValue(file, type: str):
 			return struct.unpack("<f", file.read(4))
 		case "double":
 			return struct.unpack("<d", file.read(8))
+
+def GetValue(file, type: str):
+	loops = int.from_bytes(file.read(1), "little")
+	if (loops == 1):
+		match(type):
+			case "uint8":
+				return int.from_bytes(file.read(1), "little")
+			case "uint16":
+				return int.from_bytes(file.read(2), "little")
+			case "uint32":
+				return int.from_bytes(file.read(4), "little")
+			case "uint64":
+				return int.from_bytes(file.read(4), "little")
+			case "int8":
+				return int.from_bytes(file.read(1), "little", signed=True)
+			case "int16":
+				return int.from_bytes(file.read(2), "little", signed=True)
+			case "int32":
+				return int.from_bytes(file.read(4), "little", signed=True)
+			case "int64":
+				return int.from_bytes(file.read(8), "little", signed=True)
+			case "float":
+				return struct.unpack("<f", file.read(4))
+			case "double":
+				return struct.unpack("<d", file.read(8))
+	else:
+		entry = []
+		for i in range(loops):
+			match(type):
+				case "uint8":
+					entry.append(int.from_bytes(file.read(1), "little"))
+				case "uint16":
+					entry.append(int.from_bytes(file.read(2), "little"))
+				case "uint32":
+					entry.append(int.from_bytes(file.read(4), "little"))
+				case "uint64":
+					entry.append(int.from_bytes(file.read(4), "little"))
+				case "int8":
+					entry.append(int.from_bytes(file.read(1), "little", signed=True))
+				case "int16":
+					entry.append(int.from_bytes(file.read(2), "little", signed=True))
+				case "int32":
+					entry.append(int.from_bytes(file.read(4), "little", signed=True))
+				case "int64":
+					entry.append(int.from_bytes(file.read(8), "little", signed=True))
+				case "float":
+					entry.append(struct.unpack("<f", file.read(4)))
+				case "double":
+					entry.append(struct.unpack("<d", file.read(8)))
+		return entry
 
 def GetValueType(file) -> str:
 	value_type = int.from_bytes(file.read(1), "little")
@@ -59,6 +109,7 @@ def GetValueType(file) -> str:
 			return "double"
 		case _:
 			print("Wrong value type 0x%x at offset 0x%x" % (value_type, file.tell()-1))
+			sys.exit()
 
 def processData(file, size):
 	ret_list = []
@@ -83,7 +134,7 @@ def processData(file, size):
 					entry["compare_address"].append(int.from_bytes(file.read(4), "little", signed=True))
 				entry["compare_type"] = GetCompareType(file)
 				entry["compare_value_type"] = GetValueType(file)
-				entry["compare_value"] = GetValue(file, entry["compare_value_type"])
+				entry["compare_value"] = GetCompareValue(file, entry["compare_value_type"])
 				entry["address"] = []
 				address_count = int.from_bytes(file.read(1), "little", signed=True)
 				for i in range(address_count):

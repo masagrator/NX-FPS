@@ -52,37 +52,62 @@ def returnCompare(compare_type: str, value_type: str, value) -> bytes:
 
 def returnValue(value_type: str, value) -> bytes:
 	entry = []
+	if isinstance(value, list) == True:
+		loops = len(value)
+	else: 
+		loops = 1
+		value = [value]
 	match(value_type):
 		case "uint8":
 			entry.append(0x1.to_bytes(1, "little"))
-			entry.append(value.to_bytes(1, "little"))
+			entry.append(loops.to_bytes(1, "little"))
+			for i in range(loops):
+				entry.append(value[i].to_bytes(1, "little"))
 		case "uint16":
 			entry.append(0x2.to_bytes(1, "little"))
-			entry.append(value.to_bytes(2, "little"))
+			entry.append(loops.to_bytes(1, "little"))
+			for i in range(loops):
+				entry.append(value[i].to_bytes(2, "little"))
 		case "uint32":
 			entry.append(0x4.to_bytes(1, "little"))
-			entry.append(value.to_bytes(4, "little"))
+			entry.append(loops.to_bytes(1, "little"))
+			for i in range(loops):
+				entry.append(value[i].to_bytes(4, "little"))
 		case "uint64":
 			entry.append(0x8.to_bytes(1, "little"))
-			entry.append(value.to_bytes(8, "little"))
+			entry.append(loops.to_bytes(1, "little"))
+			for i in range(loops):
+				entry.append(value[i].to_bytes(8, "little"))
 		case "int8":
 			entry.append(0x11.to_bytes(1, "little"))
-			entry.append(value.to_bytes(1, "little", signed=True))
+			entry.append(loops.to_bytes(1, "little"))
+			for i in range(loops):
+				entry.append(value[i].to_bytes(1, "little", signed=True))
 		case "int16":
 			entry.append(0x12.to_bytes(1, "little"))
-			entry.append(value.to_bytes(2, "little", signed=True))
+			entry.append(loops.to_bytes(1, "little"))
+			for i in range(loops):
+				entry.append(value[i].to_bytes(2, "little", signed=True))
 		case "int32":
 			entry.append(0x14.to_bytes(1, "little"))
-			entry.append(value.to_bytes(4, "little", signed=True))
+			entry.append(loops.to_bytes(1, "little"))
+			for i in range(loops):
+				entry.append(value[i].to_bytes(4, "little", signed=True))
 		case "int64":
 			entry.append(0x18.to_bytes(1, "little"))
-			entry.append(value.to_bytes(8, "little", signed=True))
+			entry.append(loops.to_bytes(1, "little"))
+			for i in range(loops):
+				entry.append(value[i].to_bytes(8, "little", signed=True))
 		case "float":
 			entry.append(0x24.to_bytes(1, "little"))
-			entry.append(struct.pack('<f', value))
+			entry.append(loops.to_bytes(1, "little"))
+			for i in range(loops):
+				entry.append(struct.pack('<f', value[i]))
 		case "double":
 			entry.append(0x28.to_bytes(1, "little"))
-			entry.append(struct.pack('<d', value))
+			entry.append(loops.to_bytes(1, "little"))
+			for i in range(loops):
+				entry.append(struct.pack('<d', value[i]))
 		case _:
 			print("Wrong type!")
 			sys.exit()
@@ -107,8 +132,6 @@ for i in range(len(OBJECTS)):
 				entry.append(address_count.to_bytes(1, "little"))
 				for y in range(address_count):
 					entry.append(DICT[OBJECTS[i]][x]["address"][y].to_bytes(4, "little", signed=True))
-				if isinstance(DICT[OBJECTS[i]][x]["value"], list) == True:
-					DICT[OBJECTS[i]][x]["value"] = DICT[OBJECTS[i]][x]["value"][0]
 				entry.append(returnValue(DICT[OBJECTS[i]][x]["value_type"], DICT[OBJECTS[i]][x]["value"]))
 			case "compare":
 				entry.append(b"\x02")
@@ -123,8 +146,6 @@ for i in range(len(OBJECTS)):
 				entry.append(address_count.to_bytes(1, "little"))
 				for y in range(address_count):
 					entry.append(DICT[OBJECTS[i]][x]["address"][y].to_bytes(4, "little", signed=True))
-				if isinstance(DICT[OBJECTS[i]][x]["value"], list) == True:
-					DICT[OBJECTS[i]][x]["value"] = DICT[OBJECTS[i]][x]["value"][0]
 				entry.append(returnValue(DICT[OBJECTS[i]][x]["value_type"], DICT[OBJECTS[i]][x]["value"]))
 			case _:
 				print(f"Unknown type of patch at {OBJECTS[i]}!")

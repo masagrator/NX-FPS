@@ -1,0 +1,138 @@
+15FPS:
+  -
+    type: write
+    address: [0x1A08F98]
+    value_type: int32
+    value: [2, 2]
+20FPS:
+  -
+    type: write
+    address: [0x1A08F98]
+    value_type: int32
+    value: [2, 2]
+25FPS:
+  -
+    type: write
+    address: [0x1A08F98]
+    value_type: int32
+    value: [2, 2]
+30FPS:
+  -
+    type: write
+    address: [0x1A08F98]
+    value_type: int32
+    value: [2, 2]
+35FPS:
+  -
+    type: compare
+    compare_address: [0x1A65958]
+    compare_type: "!="
+    compare_value_type: int8
+    compare_value: 1
+    address: [0x1A08F98]
+    value_type: int32
+    value: [1, 1]
+  -
+    type: compare
+    compare_address: [0x1A65958]
+    compare_type: "!="
+    compare_value_type: int8
+    compare_value: 0
+    address: [0x1A08F98]
+    value_type: int32
+    value: [2, 2]
+40FPS:
+  -
+    type: compare
+    compare_address: [0x1A65958]
+    compare_type: "!="
+    compare_value_type: int8
+    compare_value: 1
+    address: [0x1A08F98]
+    value_type: int32
+    value: [1, 1]
+  -
+    type: compare
+    compare_address: [0x1A65958]
+    compare_type: "!="
+    compare_value_type: int8
+    compare_value: 0
+    address: [0x1A08F98]
+    value_type: int32
+    value: [2, 2]
+45FPS:
+  -
+    type: compare
+    compare_address: [0x1A65958]
+    compare_type: "!="
+    compare_value_type: int8
+    compare_value: 1
+    address: [0x1A08F98]
+    value_type: int32
+    value: [1, 1]
+  -
+    type: compare
+    compare_address: [0x1A65958]
+    compare_type: "!="
+    compare_value_type: int8
+    compare_value: 0
+    address: [0x1A08F98]
+    value_type: int32
+    value: [2, 2]
+50FPS:
+  -
+    type: compare
+    compare_address: [0x1A65958]
+    compare_type: "!="
+    compare_value_type: int8
+    compare_value: 1
+    address: [0x1A08F98]
+    value_type: int32
+    value: [1, 1]
+  -
+    type: compare
+    compare_address: [0x1A65958]
+    compare_type: "!="
+    compare_value_type: int8
+    compare_value: 0
+    address: [0x1A08F98]
+    value_type: int32
+    value: [2, 2]
+55FPS:
+  -
+    type: compare
+    compare_address: [0x1A65958]
+    compare_type: "!="
+    compare_value_type: int8
+    compare_value: 1
+    address: [0x1A08F98]
+    value_type: int32
+    value: [1, 1]
+  -
+    type: compare
+    compare_address: [0x1A65958]
+    compare_type: "!="
+    compare_value_type: int8
+    compare_value: 0
+    address: [0x1A08F98]
+    value_type: int32
+    value: [2, 2]
+60FPS:
+  -
+    type: compare
+    compare_address: [0x1A65958]
+    compare_type: "!="
+    compare_value_type: int8
+    compare_value: 1
+    address: [0x1A08F98]
+    value_type: int32
+    value: [1, 1]
+  -
+    type: compare
+    compare_address: [0x1A65958]
+    compare_type: "!="
+    compare_value_type: int8
+    compare_value: 0
+    address: [0x1A08F98]
+    value_type: int32
+    value: [2, 2]
