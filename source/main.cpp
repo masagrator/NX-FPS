@@ -4,8 +4,6 @@
 #include "saltysd/SaltySD_core.h"
 #include "ltoa.h"
 #include <cstdlib>
-#include <string>
-#include <array>
 #include "lock.hpp"
 
 extern "C" {
