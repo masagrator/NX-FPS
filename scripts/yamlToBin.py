@@ -136,8 +136,17 @@ for i in range(len(OBJECTS)):
 new_file = open(f"{Path(sys.argv[1]).stem}.bin", "wb")
 new_file.write(b"LOCK")
 base = 44
+offsets = []
+NEW_DATA = []
 for i in range(len(OBJECTS)):
-	new_file.write(base.to_bytes(4, "little"))
-	base += len(DATA[i])
-new_file.write(b"".join(DATA))
+	if (DATA.count(DATA[i]) > 1 and DATA.index(DATA[i]) < i):
+		offset = offsets[DATA.index(DATA[i])]
+		new_file.write(offset.to_bytes(4, "little"))
+		offsets.append(offset)
+	else:
+		new_file.write(base.to_bytes(4, "little"))
+		offsets.append(base)
+		NEW_DATA.append(DATA[i])
+		base += len(DATA[i])
+new_file.write(b"".join(NEW_DATA))
 new_file.close()
