@@ -1,5 +1,5 @@
 # type: write, compare
-# address: always list (between [ and ]), first address is always an offset from main
+# address: always list (between [ and ]), first address is always an offset from MAIN
 # value_type: int8, uint8, int16, uint16, int32, uint32, int64, uint64, float, double
 # value: integer or decimal, supports list (between [ and ], then each number is stored in RAM one after another)
 #
