@@ -139,7 +139,7 @@ base = 44
 offsets = []
 NEW_DATA = []
 for i in range(len(OBJECTS)):
-	if (DATA.count(DATA[i]) > 1 and DATA.index(DATA[i]) < i):
+	if (DATA.index(DATA[i]) < i):
 		offset = offsets[DATA.index(DATA[i])]
 		new_file.write(offset.to_bytes(4, "little"))
 		offsets.append(offset)
