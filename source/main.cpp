@@ -6,12 +6,12 @@
 #include <cstdlib>
 #include <string>
 #include <array>
-#include <algorithm>
+#include "lock.hpp"
 
 extern "C" {
 	extern u32 __start__;
 
-	static char g_heap[0x8000];
+	static char g_heap[0x10000];
 
 	void __libnx_init(void* ctx, Handle main_thread, void* saved_lr);
 	void __attribute__((weak)) NORETURN __libnx_exit(int rc);
@@ -24,166 +24,17 @@ extern "C" {
 	extern u32 vkQueuePresentKHR(void* vk_unk1, void* vk_unk2) LINKABLE;
 }
 
-struct PatchingEntry {
-	uint8_t entries;
-	uint8_t* addresses_count;
-	int* addresses;
-	uint8_t* value_type; //0 - err, 1 - int8, 2 - int16, 3 - int32, 4 - int64, 10 - float, 11 - double
-	double* type_double;
-	float* type_float;
-	int64_t* type_int;
-};
-
-std::array FPS_blocks {
-	"\n[15 FPS]\n",
-	"\n[20 FPS]\n",
-	"\n[25 FPS]\n",
-	"\n[30 FPS]\n",
-	"\n[35 FPS]\n",
-	"\n[40 FPS]\n",
-	"\n[45 FPS]\n",
-	"\n[50 FPS]\n",
-	"\n[55 FPS]\n",
-	"\n[60 FPS]\n",
-	"\n[END]"
-};
-
-std::array FPS_types {
-	"int8",
-	"int16",
-	"int32",
-	"int64",
-	"float",
-	"double"
-};
-
-PatchingEntry* parsedConfig = 0;
-
-Result configSanityCheck(std::string config) {
-	for (size_t i = 0; i < std::size(FPS_blocks); i++)
-		if (config.find(FPS_blocks[i]) == std::string::npos)
-			return 1;
-	return 0;
-}
-
-Result configRead(PatchingEntry* codes, std::string config) {
-	size_t pos = 0;
-	size_t end = 1;
-	char* buffer = (char*)calloc(1, 32);
-	for (size_t i = 0; i < (std::size(FPS_blocks) - 1); i++) {
-		if ((pos = config.find(FPS_blocks[i])) != std::string::npos) {
-			pos += 10;
-			size_t start = pos;
-			end = config.find(FPS_blocks[i+1], pos);
-			if (!i) {
-				strncpy(buffer, &(config.c_str()[pos]), end - pos);
-				if (strncmp(buffer, "0x", 2))
-					return 1;
-			}
-			auto lines = std::count(&(config.c_str()[pos]), &(config.c_str()[end]), '\n');
-			auto all_address_count = std::count<const char*, uint16_t>(&(config.c_str()[pos]), &(config.c_str()[end]), 12408);
-			codes[i].entries = lines - all_address_count;
-			codes[i].addresses_count = (uint8_t*)calloc(lines - all_address_count, sizeof(uint8_t));
-			codes[i].addresses = (int*)calloc(all_address_count, sizeof(int));
-			codes[i].value_type = (uint8_t*)calloc(lines - all_address_count, sizeof(uint8_t));
-			
-			size_t int_count = 0;
-			size_t float_count = 0;
-			size_t double_count = 0;
-			for (int x = 0; x < lines; x++) {
-				strncpy(buffer, &(config.c_str()[pos]), end - pos);
-				if (strncmp(buffer, "0x", 2)) {
-					if (!strncmp(buffer, "float", 5)) {
-						float_count += 1;
-						continue;
-					}
-					else if (!strncmp(buffer, "double", 6)) {
-						double_count += 1;
-						continue;
-					}
-					size_t y = 0;
-					while(y < 4) {
-						if (!strncmp(buffer, FPS_types[y], strlen(FPS_types[y]))) {
-							int_count += 1;
-							break;
-						}
-						y++;
-					}
-					if (y == 4) return 2;
-				}
-				pos = end;
-				end = config.find("\n", pos) + 1;
-			}
-			if (int_count) codes[i].type_int = (int64_t*)calloc(int_count, sizeof(int64_t));
-			if (float_count) codes[i].type_float = (float*)calloc(int_count, sizeof(float));
-			if (double_count) codes[i].type_double = (double*)calloc(int_count, sizeof(double));
-
-			pos = start;
-			end = config.find("\n", pos);
-
-			uint8_t address_itr = 0;
-			uint8_t type_itr = 0;
-			uint8_t int_itr = 0;
-			uint8_t float_itr = 0;
-			uint8_t double_itr = 0;
-
-			for (int x = 0; x < lines; x++) {
-				strncpy(buffer, &(config.c_str()[pos]), end - pos);
-				if (strncmp(buffer, "0x", 2)) {
-					codes[i].addresses_count[x] += 1;
-					codes[i].addresses[address_itr] = strtol(buffer, nullptr, 16);
-					address_itr += 1;
-				}
-				else if (strncmp(buffer, "double", 6)) {
-					codes[i].value_type[type_itr] = 11;
-					char* end = 0;
-					codes[i].type_double[double_itr] = strtod(&buffer[7], &end);
-					double_itr += 1;
-					type_itr += 1;
-				}
-				else if (strncmp(buffer, "float", 5)) {
-					codes[i].value_type[type_itr] = 10;
-					char* end = 0;
-					codes[i].type_double[double_itr] = strtod(&buffer[6], &end);
-					float_itr += 1;
-					type_itr += 1;
-				}
-				else {
-					int y = 0;
-					while (y < 4) {
-						if (!strncmp(buffer, FPS_types[y], strlen(FPS_types[y]))) {
-								codes[i].value_type[type_itr] = y+1;
-								codes[i].type_int[int_itr] = strtol(buffer, nullptr, 16);
-								type_itr += 1;
-								int_itr += 1;
-								break;
-							}
-						y++;
-					}
-					if (y == 4) return 3;
-				}
-			}
-		}
-	}
-	return 0;
-}
-
-Result readConfig(const char* path) {
+Result readConfig(const char* path, uint8_t** output_buffer) {
 	FILE* patch_file = SaltySDCore_fopen(path, "rb");
 	SaltySDCore_fseek(patch_file, 0, 2);
 	size_t filesize = SaltySDCore_ftell(patch_file);
 	SaltySDCore_fclose(patch_file);
+	uint8_t* buffer = (uint8_t*)calloc(1, filesize);
 	patch_file = SaltySDCore_fopen(path, "r");
-	char* buffer = (char*)calloc(1, filesize);
 	SaltySDCore_fread(buffer, filesize, 1, patch_file);
 	SaltySDCore_fclose(patch_file);
-	std::string text = buffer;
-	free(buffer);
-	if (configSanityCheck(text))
-		return 1;
-	parsedConfig = (PatchingEntry*)calloc(10, sizeof(PatchingEntry));
-	configRead(parsedConfig, text);
-	return 0;
+	SaltySDCore_printf("NX-FPS: successfully loaded patch!\n");
+	return !LOCK::isValid(buffer, filesize);
 }
 
 u32 __nx_applet_type = AppletType_None;
@@ -193,6 +44,7 @@ void* orig_saved_lr;
 SharedMemory _sharedmemory = {};
 Handle remoteSharedMemory = 0;
 ptrdiff_t SharedMemoryOffset = 1234;
+uint8_t* configBuffer = 0;
 
 void __libnx_init(void* ctx, Handle main_thread, void* saved_lr) {
 	extern char* fake_heap_start;
@@ -273,7 +125,7 @@ inline void createBuildidPath(uint64_t buildid, char* titleid, char* buffer) {
 		free(temp);
 	}
 	strcat(buffer, &titleid[0]);
-	strcat(buffer, ".ini");	
+	strcat(buffer, ".bin");	
 }
 
 inline void CheckTitleID(char* buffer) {
@@ -514,6 +366,7 @@ uintptr_t nvnBootstrapLoader_1(const char* nvnName) {
 
 int main(int argc, char *argv[]) {
 	SaltySDCore_printf("NX-FPS: alive\n");
+	LOCK::main_address = SaltySDCore_getCodeStart() + 0x4000;
 	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 13);
 	SaltySDCore_printf("NX-FPS: ret: 0x%X\n", ret);
 	if (!ret) {
@@ -570,7 +423,7 @@ int main(int argc, char *argv[]) {
 				if (patch_file) {
 					SaltySDCore_fclose(patch_file);
 					SaltySDCore_printf("NX-FPS: successfully opened BID path: %s\n", path);
-					Result rc = readConfig(path);
+					Result rc = readConfig(path, &configBuffer);
 					SaltySDCore_printf("NX-FPS: readConfig rc: %d\n", rc);
 				}
 				SaltySDCore_printf("NX-FPS: Wrong BID path: %s\n", path);
