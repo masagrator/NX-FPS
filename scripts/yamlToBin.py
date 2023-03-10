@@ -107,6 +107,8 @@ for i in range(len(OBJECTS)):
 				entry.append(address_count.to_bytes(1, "little"))
 				for y in range(address_count):
 					entry.append(DICT[OBJECTS[i]][x]["address"][y].to_bytes(4, "little", signed=True))
+				if isinstance(DICT[OBJECTS[i]][x]["value"], list) == True:
+					DICT[OBJECTS[i]][x]["value"] = DICT[OBJECTS[i]][x]["value"][0]
 				entry.append(returnValue(DICT[OBJECTS[i]][x]["value_type"], DICT[OBJECTS[i]][x]["value"]))
 			case "compare":
 				entry.append(b"\x02")
@@ -114,11 +116,15 @@ for i in range(len(OBJECTS)):
 				entry.append(compare_address_count.to_bytes(1, "little"))
 				for y in range(compare_address_count):
 					entry.append(DICT[OBJECTS[i]][x]["compare_address"][y].to_bytes(4, "little", signed=True))
+				if isinstance(DICT[OBJECTS[i]][x]["compare_value"], list) == True:
+					DICT[OBJECTS[i]][x]["compare_value"] = DICT[OBJECTS[i]][x]["compare_value"][0]
 				entry.append(returnCompare(DICT[OBJECTS[i]][x]["compare_type"], DICT[OBJECTS[i]][x]["compare_value_type"], DICT[OBJECTS[i]][x]["compare_value"]))
 				address_count = len(DICT[OBJECTS[i]][x]["address"])
 				entry.append(address_count.to_bytes(1, "little"))
 				for y in range(address_count):
 					entry.append(DICT[OBJECTS[i]][x]["address"][y].to_bytes(4, "little", signed=True))
+				if isinstance(DICT[OBJECTS[i]][x]["value"], list) == True:
+					DICT[OBJECTS[i]][x]["value"] = DICT[OBJECTS[i]][x]["value"][0]
 				entry.append(returnValue(DICT[OBJECTS[i]][x]["value_type"], DICT[OBJECTS[i]][x]["value"]))
 			case _:
 				print(f"Unknown type of patch at {OBJECTS[i]}!")
