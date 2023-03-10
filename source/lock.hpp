@@ -208,9 +208,9 @@ namespace LOCK {
 	bool isValid(uint8_t* buffer, size_t filesize) {
 		if (*(uint32_t*)buffer != 0x4B434F4C)
 			return false;
-		if (*(uint32_t*)buffer[1] != 44)
+		if (*(uint32_t*)(&(buffer[4])) != 44)
 			return false;
-		uint32_t offset = *(uint32_t*)buffer[10];
+		uint32_t offset = *(uint32_t*)(&(buffer[10]));
 		if (offset > filesize)
 			return false;
 		if (buffer[filesize-1] != 0xFF)
@@ -229,30 +229,30 @@ namespace LOCK {
 			int64_t address = getAddress(buffer, offsets_count);
 			if (address < 0) 
 				return 6;
-			uint8_t value_type = read8(buffer); // 1 - uint8, 2 - uint16, 4 - uint32, 8 - uint64, 11 - int8, 12 - int16, 14 - int32, 18 - int64, 24 - float, 28 - double
+			uint8_t value_type = read8(buffer); // 1 - uint8, 2 - uint16, 4 - uint32, 8 - uint64, 0x11 - int8, 0x12 - int16, 0x14 - int32, 0x18 - int64, 0x24 - float, 0x28 - double
 			switch(value_type) {
 				case 1:
-				case 11: {
+				case 0x11: {
 					uint8_t value8 = read8(buffer);
 					*(uint8_t*)address = value8;
 					break;
 				}
 				case 2:
-				case 12: {
+				case 0x12: {
 					uint16_t value16 = read16(buffer);
 					*(uint16_t*)address = value16;
 					break;
 				}
 				case 4:
-				case 14:
-				case 24: {
+				case 0x14:
+				case 0x24: {
 					uint32_t value32 = read32(buffer);
 					*(uint32_t*)address = value32;
 					break;
 				}
 				case 8:
-				case 18:
-				case 28: {
+				case 0x18:
+				case 0x28: {
 					uint64_t value64 = read64(buffer);
 					*(uint64_t*)address = value64;
 					break;
@@ -268,7 +268,7 @@ namespace LOCK {
 				return 6;
 
 			uint8_t compare_type = read8(buffer); // 1 - >, 2 - >=, 3 - <, 4 - <=, 5 - ==, 6 - !=
-			uint8_t value_type = read8(buffer); // 1 - uint8, 2 - uint16, 4 - uint32, 8 - uint64, 11 - int8, 12 - int16, 14 - int32, 18 - int64, 24 - float, 28 - double
+			uint8_t value_type = read8(buffer); // 1 - uint8, 2 - uint16, 4 - uint32, 8 - uint64, 0x11 - int8, 0x12 - int16, 0x14 - int32, 0x18 - int64, 0x24 - float, 0x28 - double
 			bool passed = false;
 			switch(value_type) {
 				case 1: {
@@ -294,36 +294,36 @@ namespace LOCK {
 					passed = compareValues(uint64_compare, uint64_tocompare, compare_type);
 					break;
 				}
-				case 11: {
+				case 0x11: {
 					int8_t int8_compare = *(int8_t*)address;
 					int8_t int8_tocompare = (int8_t)read8(buffer);
 					passed = compareValues((int64_t)int8_compare, (int64_t)int8_tocompare, compare_type);
 				}
-				case 12: {
+				case 0x12: {
 					int16_t int16_compare = *(int16_t*)address;
 					int16_t int16_tocompare = (int16_t)read16(buffer);
 					passed = compareValues((int64_t)int16_compare, (int64_t)int16_tocompare, compare_type);
 					break;
 				}
-				case 14: {
+				case 0x14: {
 					int32_t int32_compare = *(int32_t*)address;
 					int32_t int32_tocompare = (int32_t)read32(buffer);
 					passed = compareValues((int64_t)int32_compare, (int64_t)int32_tocompare, compare_type);
 					break;
 				}
-				case 18: {
+				case 0x18: {
 					int64_t int64_compare = *(int64_t*)address;
 					int64_t int64_tocompare = (int64_t)read64(buffer);
 					passed = compareValues(int64_compare, int64_tocompare, compare_type);
 					break;
 				}
-				case 24: {
+				case 0x24: {
 					float float_compare = *(float*)address;
 					float float_tocompare = readFloat(buffer);
 					passed = compareValues(float_compare, float_tocompare, compare_type);
 					break;
 				}
-				case 28: {
+				case 0x28: {
 					double double_compare = *(double*)address;
 					double double_tocompare = readDouble(buffer);
 					passed = compareValues(double_compare, double_tocompare, compare_type);
@@ -337,30 +337,30 @@ namespace LOCK {
 			address = getAddress(buffer, offsets_count);
 			if (address < 0) 
 				return 6;
-			value_type = read8(buffer); // 1 - uint8, 2 - uint16, 4 - uint32, 8 - uint64, 11 - int8, 12 - int16, 14 - int32, 18 - int64, 24 - float, 28 - double
+			value_type = read8(buffer); // 1 - uint8, 2 - uint16, 4 - uint32, 8 - uint64, 0x11 - int8, 0x12 - int16, 0x14 - int32, 0x18 - int64, 0x24 - float, 0x28 - double
 			switch(value_type) {
 				case 1:
-				case 11: {
+				case 0x11: {
 					uint8_t value8 = read8(buffer);
 					if (passed) *(uint8_t*)address = value8;
 					break;
 				}
 				case 2:
-				case 12: {
+				case 0x12: {
 					uint16_t value16 = read16(buffer);
 					if (passed) *(uint16_t*)address = value16;
 					break;
 				}
 				case 4:
-				case 14:
-				case 24: {
+				case 0x14:
+				case 0x24: {
 					uint32_t value32 = read32(buffer);
 					if (passed) *(uint32_t*)address = value32;
 					break;
 				}
 				case 8:
-				case 18:
-				case 28: {
+				case 0x18:
+				case 0x28: {
 					uint64_t value64 = read64(buffer);
 					*(uint64_t*)address = value64;
 					break;

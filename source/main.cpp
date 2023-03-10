@@ -31,8 +31,14 @@ Result readConfig(const char* path, uint8_t** output_buffer) {
 	patch_file = SaltySDCore_fopen(path, "r");
 	SaltySDCore_fread(buffer, filesize, 1, patch_file);
 	SaltySDCore_fclose(patch_file);
+	if (LOCK::isValid(buffer, filesize)) {
+		SaltySDCore_printf("NX-FPS: patch loaded unsuccessfully!\n");
+		free(buffer);
+		return 1;
+	}
 	SaltySDCore_printf("NX-FPS: successfully loaded patch!\n");
-	return !LOCK::isValid(buffer, filesize);
+	*output_buffer = buffer;
+	return 0;
 }
 
 u32 __nx_applet_type = AppletType_None;
