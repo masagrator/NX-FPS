@@ -258,7 +258,7 @@ namespace LOCK {
 					break;
 				}
 				default:
-					return -3;
+					return 3;
 			}
 		}
 		else if (OPCODE == 2) {
