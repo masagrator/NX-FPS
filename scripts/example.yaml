@@ -5,7 +5,7 @@
 #
 # /*compare type exclusive
 # /*value read from compare_address is a left operand, compare_value is right operand
-# compare_address: always list (between [ and ]), first address is always a offset from main
+# compare_address: always list (between [ and ]), first address is always an offset from MAIN
 # compare_type: "<", "<=", ">", ">=", "==", "!="
 # compare_value: integer or decimal
 
