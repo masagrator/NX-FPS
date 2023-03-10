@@ -1,4 +1,4 @@
-import yaml
+import ruamel.yaml
 import sys
 from pathlib import Path
 import struct
@@ -115,7 +115,7 @@ def returnValue(value_type: str, value) -> bytes:
 
 
 file = open(sys.argv[1], "r", encoding="ascii")
-DICT = yaml.safe_load(file.read())
+DICT = ruamel.yaml.safe_load(file.read())
 file.close()
 
 DATA = []
