@@ -1,3 +1,4 @@
+#pragma once
 /* Design file how to build binary file for FPSLocker.
 
 1. Helper functions */
@@ -230,31 +231,44 @@ namespace LOCK {
 			if (address < 0) 
 				return 6;
 			uint8_t value_type = read8(buffer); // 1 - uint8, 2 - uint16, 4 - uint32, 8 - uint64, 0x11 - int8, 0x12 - int16, 0x14 - int32, 0x18 - int64, 0x24 - float, 0x28 - double
+			uint8_t loops = read8(buffer);
 			switch(value_type) {
 				case 1:
 				case 0x11: {
-					uint8_t value8 = read8(buffer);
-					*(uint8_t*)address = value8;
+					for (uint8_t i = 0; i < loops; i++) {
+						uint8_t value8 = read8(buffer);
+						*(uint8_t*)address = value8;
+						address += 1;
+					}
 					break;
 				}
 				case 2:
 				case 0x12: {
-					uint16_t value16 = read16(buffer);
-					*(uint16_t*)address = value16;
+					for (uint8_t i = 0; i < loops; i++) {
+						uint16_t value16 = read16(buffer);
+						*(uint16_t*)address = value16;
+						address += 2;
+					}
 					break;
 				}
 				case 4:
 				case 0x14:
 				case 0x24: {
-					uint32_t value32 = read32(buffer);
-					*(uint32_t*)address = value32;
+					for (uint8_t i = 0; i < loops; i++) {
+						uint32_t value32 = read32(buffer);
+						*(uint32_t*)address = value32;
+						address += 4;
+					}
 					break;
 				}
 				case 8:
 				case 0x18:
 				case 0x28: {
-					uint64_t value64 = read64(buffer);
-					*(uint64_t*)address = value64;
+					for (uint8_t i = 0; i < loops; i++) {
+						uint64_t value64 = read64(buffer);
+						*(uint64_t*)address = value64;
+						address += 8;
+					}
 					break;
 				}
 				default:
@@ -338,31 +352,44 @@ namespace LOCK {
 			if (address < 0) 
 				return 6;
 			value_type = read8(buffer); // 1 - uint8, 2 - uint16, 4 - uint32, 8 - uint64, 0x11 - int8, 0x12 - int16, 0x14 - int32, 0x18 - int64, 0x24 - float, 0x28 - double
+			uint8_t loops = read8(buffer);
 			switch(value_type) {
 				case 1:
 				case 0x11: {
-					uint8_t value8 = read8(buffer);
-					if (passed) *(uint8_t*)address = value8;
+					for (uint8_t i = 0; i < loops; i++) {
+						uint8_t value8 = read8(buffer);
+						if (passed) *(uint8_t*)address = value8;
+						address += 1;
+					}
 					break;
 				}
 				case 2:
 				case 0x12: {
-					uint16_t value16 = read16(buffer);
-					if (passed) *(uint16_t*)address = value16;
+					for (uint8_t i = 0; i < loops; i++) {
+						uint16_t value16 = read16(buffer);
+						if (passed) *(uint16_t*)address = value16;
+						address += 2;
+					}
 					break;
 				}
 				case 4:
 				case 0x14:
 				case 0x24: {
-					uint32_t value32 = read32(buffer);
-					if (passed) *(uint32_t*)address = value32;
+					for (uint8_t i = 0; i < loops; i++) {
+						uint32_t value32 = read32(buffer);
+						if (passed) *(uint32_t*)address = value32;
+						address += 4;
+					}
 					break;
 				}
 				case 8:
 				case 0x18:
 				case 0x28: {
-					uint64_t value64 = read64(buffer);
-					*(uint64_t*)address = value64;
+					for (uint8_t i = 0; i < loops; i++) {
+						uint64_t value64 = read64(buffer);
+						*(uint64_t*)address = value64;
+						address += 8;
+					}
 					break;
 				}
 				default:
