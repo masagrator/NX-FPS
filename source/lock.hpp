@@ -191,7 +191,7 @@ namespace LOCK {
 		
 		uint64_t address = main_address;
 		for (int i = 0; i < offsets_count; i++) {
-			uint32_t temp_offset = read32(buffer);
+			int32_t temp_offset = (int32_t)read32(buffer);
 			address += temp_offset;
 			if (i+1 < offsets_count) {
 				if (!*(uint64_t*)address)
