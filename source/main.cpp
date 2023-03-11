@@ -430,7 +430,7 @@ int main(int argc, char *argv[]) {
 					Result rc = readConfig(path, &configBuffer);
 					SaltySDCore_printf("NX-FPS: readConfig rc: %d\n", rc);
 				}
-				SaltySDCore_printf("NX-FPS: Wrong BID path: %s\n", path);
+				else SaltySDCore_printf("NX-FPS: Wrong BID path: %s\n", path);
 			}
 		}
 		else {
