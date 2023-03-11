@@ -11,35 +11,17 @@ namespace LOCK {
 	bool compareValues(uint64_t value1, uint64_t value2, uint8_t compare_type) { // 1 - >, 2 - >=, 3 - <, 4 - <=, 5 - ==, 6 - !=
 		switch(compare_type) {
 			case 1:
-				if (value1 > value2) {
-					return true;
-				}
-				break;
+				return (value1 > value2);
 			case 2:
-				if (value1 >= value2) {
-					return true;
-				}
-				break;
+				return (value1 >= value2);
 			case 3:
-				if (value1 < value2) {
-					return true;
-				}
-				break;
+				return (value1 < value2);
 			case 4:
-				if (value1 <= value2) {
-					return true;
-				}
-				break;
+				return (value1 <= value2);
 			case 5:
-				if (value1 == value2) {
-					return true;
-				}
-				break;
+				return (value1 == value2);
 			case 6:
-				if (value1 != value2) {
-					return true;
-				}
-				break;
+				return (value1 != value2);
 		}
 		return false;
 	}
@@ -47,35 +29,17 @@ namespace LOCK {
 	bool compareValues(int64_t value1, int64_t value2, uint8_t compare_type) { // 1 - >, 2 - >=, 3 - <, 4 - <=, 5 - ==, 6 - !=
 		switch(compare_type) {
 			case 1:
-				if (value1 > value2) {
-					return true;
-				}
-				break;
+				return (value1 > value2);
 			case 2:
-				if (value1 >= value2) {
-					return true;
-				}
-				break;
+				return (value1 >= value2);
 			case 3:
-				if (value1 < value2) {
-					return true;
-				}
-				break;
+				return (value1 < value2);
 			case 4:
-				if (value1 <= value2) {
-					return true;
-				}
-				break;
+				return (value1 <= value2);
 			case 5:
-				if (value1 == value2) {
-					return true;
-				}
-				break;
+				return (value1 == value2);
 			case 6:
-				if (value1 != value2) {
-					return true;
-				}
-				break;
+				return (value1 != value2);
 		}
 		return false;
 	}
@@ -83,35 +47,17 @@ namespace LOCK {
 	bool compareValues(float value1, float value2, uint8_t compare_type) { // 1 - >, 2 - >=, 3 - <, 4 - <=, 5 - ==, 6 - !=
 		switch(compare_type) {
 			case 1:
-				if (value1 > value2) {
-					return true;
-				}
-				break;
+				return (value1 > value2);
 			case 2:
-				if (value1 >= value2) {
-					return true;
-				}
-				break;
+				return (value1 >= value2);
 			case 3:
-				if (value1 < value2) {
-					return true;
-				}
-				break;
+				return (value1 < value2);
 			case 4:
-				if (value1 <= value2) {
-					return true;
-				}
-				break;
+				return (value1 <= value2);
 			case 5:
-				if (value1 == value2) {
-					return true;
-				}
-				break;
+				return (value1 == value2);
 			case 6:
-				if (value1 != value2) {
-					return true;
-				}
-				break;
+				return (value1 != value2);
 		}
 		return false;
 	}
@@ -119,35 +65,17 @@ namespace LOCK {
 	bool compareValues(double value1, double value2, uint8_t compare_type) { // 1 - >, 2 - >=, 3 - <, 4 - <=, 5 - ==, 6 - !=
 		switch(compare_type) {
 			case 1:
-				if (value1 > value2) {
-					return true;
-				}
-				break;
+				return (value1 > value2);
 			case 2:
-				if (value1 >= value2) {
-					return true;
-				}
-				break;
+				return (value1 >= value2);
 			case 3:
-				if (value1 < value2) {
-					return true;
-				}
-				break;
+				return (value1 < value2);
 			case 4:
-				if (value1 <= value2) {
-					return true;
-				}
-				break;
+				return (value1 <= value2);
 			case 5:
-				if (value1 == value2) {
-					return true;
-				}
-				break;
+				return (value1 == value2);
 			case 6:
-				if (value1 != value2) {
-					return true;
-				}
-				break;
+				return (value1 != value2);
 		}
 		return false;
 	}
@@ -236,8 +164,7 @@ namespace LOCK {
 				case 1:
 				case 0x11: {
 					for (uint8_t i = 0; i < loops; i++) {
-						uint8_t value8 = read8(buffer);
-						*(uint8_t*)address = value8;
+						*(uint8_t*)address = read8(buffer);
 						address += 1;
 					}
 					break;
@@ -245,8 +172,7 @@ namespace LOCK {
 				case 2:
 				case 0x12: {
 					for (uint8_t i = 0; i < loops; i++) {
-						uint16_t value16 = read16(buffer);
-						*(uint16_t*)address = value16;
+						*(uint16_t*)address = read16(buffer);
 						address += 2;
 					}
 					break;
@@ -255,8 +181,7 @@ namespace LOCK {
 				case 0x14:
 				case 0x24: {
 					for (uint8_t i = 0; i < loops; i++) {
-						uint32_t value32 = read32(buffer);
-						*(uint32_t*)address = value32;
+						*(uint32_t*)address = read32(buffer);
 						address += 4;
 					}
 					break;
@@ -265,8 +190,7 @@ namespace LOCK {
 				case 0x18:
 				case 0x28: {
 					for (uint8_t i = 0; i < loops; i++) {
-						uint64_t value64 = read64(buffer);
-						*(uint64_t*)address = value64;
+						*(uint64_t*)address = read64(buffer);
 						address += 8;
 					}
 					break;
@@ -387,7 +311,7 @@ namespace LOCK {
 				case 0x28: {
 					for (uint8_t i = 0; i < loops; i++) {
 						uint64_t value64 = read64(buffer);
-						*(uint64_t*)address = value64;
+						if (passed) *(uint64_t*)address = value64;
 						address += 8;
 					}
 					break;
