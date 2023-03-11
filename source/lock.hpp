@@ -1,11 +1,12 @@
 #pragma once
+#define NOINLINE __attribute__ ((noinline))
 /* Design file how to build binary file for FPSLocker.
 
 1. Helper functions */
 
 namespace LOCK {
 
-	uint64_t main_address = 0;
+	int64_t main_address = 0;
 	uint32_t offset = 0;
 
 	template <typename T>
@@ -63,9 +64,11 @@ namespace LOCK {
 		return ret;
 	}
 
-	bool isAddressValid(int64_t address) {
+	bool NOINLINE isAddressValid(int64_t address) {
 		MemoryInfo memoryinfo = {0};
 		u32 pageinfo = 0;
+
+		if ((address < 0) || (address >= 0x8000000000)) return false;
 
 		Result rc = svcQueryMemory(&memoryinfo, &pageinfo, address);
 		if (R_FAILED(rc)) return false;
@@ -74,7 +77,7 @@ namespace LOCK {
 		return false;
 	}
 
-	int64_t __attribute__ ((noinline)) getAddress(uint8_t* buffer, uint8_t offsets_count) {
+	int64_t NOINLINE getAddress(uint8_t* buffer, uint8_t offsets_count) {
 		uint64_t address = main_address;
 		for (int i = 0; i < offsets_count; i++) {
 			int32_t temp_offset = (int32_t)read32(buffer);
