@@ -78,7 +78,7 @@ namespace LOCK {
 	}
 
 	int64_t NOINLINE getAddress(uint8_t* buffer, uint8_t offsets_count) {
-		uint64_t address = main_address;
+		int64_t address = main_address;
 		for (int i = 0; i < offsets_count; i++) {
 			int32_t temp_offset = (int32_t)read32(buffer);
 			address += temp_offset;
