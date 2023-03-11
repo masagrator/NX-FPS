@@ -75,7 +75,7 @@ namespace LOCK {
 		MemoryInfo memoryinfo = {0};
 		u32 pageinfo = 0;
 
-		if (unsafeCheck && *unsafeCheck) return true;
+		if (unsafeCheck) return true;
 
 		if ((address < 0) || (address >= 0x8000000000)) return false;
 
