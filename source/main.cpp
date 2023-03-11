@@ -43,7 +43,7 @@ Result readConfig(const char* path, uint8_t** output_buffer) {
 	patch_file = SaltySDCore_fopen(path, "r");
 	SaltySDCore_fread(buffer, configSize, 1, patch_file);
 	SaltySDCore_fclose(patch_file);
-	if (LOCK::isValid(buffer, configSize)) {
+	if (!LOCK::isValid(buffer, configSize)) {
 		free(buffer);
 		return 1;
 	}

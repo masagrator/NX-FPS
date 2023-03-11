@@ -130,16 +130,16 @@ namespace LOCK {
 	bool isValid(uint8_t* buffer, size_t filesize) {
 		if (*(uint32_t*)buffer != 0x4B434F4C)
 			return false;
-		if (buffer[4] > 0)
+		if (buffer[4] != 1)
 			return false;
 		if (*(uint16_t*)(&(buffer[5])) != 0)
 			return false;
 		if (buffer[7] > 1)
 			return false;
 		unsafeCheck = (bool)buffer[7];
-		if (*(uint32_t*)(&(buffer[8])) != 48)
+		if (*(uint32_t*)(&(buffer[8])) != 0x30)
 			return false;
-		uint32_t offset = *(uint32_t*)(&(buffer[44]));
+		uint32_t offset = *(uint32_t*)(&(buffer[0x2C]));
 		if (offset > filesize)
 			return false;
 		if (buffer[filesize-1] != 0xFF)
@@ -155,13 +155,32 @@ namespace LOCK {
 		blockDelayFPS = false;
 		offset = *(uint32_t*)(&buffer[FPS+8]);
 		while(true) {
-			int8_t OPCODE = read8(buffer); // 0 - err, 1 - write, 2 - compare, -1 = endExecution
+			/* OPCODE:
+				0	=	err
+				1	=	write
+				2	=	compare
+				3	=	block
+				-1	=	endExecution
+			*/
+			int8_t OPCODE = read8(buffer);
 			if (OPCODE == 1) {
 				uint8_t offsets_count = read8(buffer);
 				int64_t address = getAddress(buffer, offsets_count);
 				if (address < 0) 
 					return 6;
-				uint8_t value_type = read8(buffer); // 1 - uint8, 2 - uint16, 4 - uint32, 8 - uint64, 0x11 - int8, 0x12 - int16, 0x14 - int32, 0x18 - int64, 0x24 - float, 0x28 - double
+				/* value_type:
+					1		=	uint8
+					2		=	uin16
+					4		=	uint32
+					8		=	uint64
+					0x11	=	int8
+					0x12	=	in16
+					0x14	=	int32
+					0x18	=	int64
+					0x24	=	float
+					0x28	=	double
+				*/
+				uint8_t value_type = read8(buffer);
 				uint8_t loops = read8(buffer);
 				switch(value_type) {
 					case 1:
@@ -208,8 +227,16 @@ namespace LOCK {
 				if (address < 0) 
 					return 6;
 
-				uint8_t compare_type = read8(buffer); // 1 - >, 2 - >=, 3 - <, 4 - <=, 5 - ==, 6 - !=
-				uint8_t value_type = read8(buffer); // 1 - uint8, 2 - uint16, 4 - uint32, 8 - uint64, 0x11 - int8, 0x12 - int16, 0x14 - int32, 0x18 - int64, 0x24 - float, 0x28 - double
+				/* compare_type:
+					1	=	>
+					2	=	>=
+					3	=	<
+					4	=	<=
+					5	=	==
+					6	=	!=
+				*/
+				uint8_t compare_type = read8(buffer);
+				uint8_t value_type = read8(buffer);
 				bool passed = false;
 				switch(value_type) {
 					case 1: {
@@ -280,7 +307,7 @@ namespace LOCK {
 				address = getAddress(buffer, offsets_count);
 				if (address < 0) 
 					return 6;
-				value_type = read8(buffer); // 1 - uint8, 2 - uint16, 4 - uint32, 8 - uint64, 0x11 - int8, 0x12 - int16, 0x14 - int32, 0x18 - int64, 0x24 - float, 0x28 - double
+				value_type = read8(buffer);
 				uint8_t loops = read8(buffer);
 				switch(value_type) {
 					case 1:
