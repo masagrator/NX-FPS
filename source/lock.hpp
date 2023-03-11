@@ -36,37 +36,37 @@ namespace LOCK {
 
 	uint8_t read8(uint8_t* buffer) {
 		uint8_t ret = buffer[offset];
-		offset += 1;
+		offset += sizeof(uint8_t);
 		return ret;
 	}
 
 	uint16_t read16(uint8_t* buffer) {
 		uint16_t ret = *(uint16_t*)(&buffer[offset]);
-		offset += 2;
+		offset += sizeof(uint16_t);
 		return ret;
 	}
 
 	uint32_t read32(uint8_t* buffer) {
 		uint32_t ret = *(uint32_t*)(&buffer[offset]);
-		offset += 4;
+		offset += sizeof(uint32_t);
 		return ret;
 	}
 
 	uint64_t read64(uint8_t* buffer) {
 		uint64_t ret = *(uint64_t*)(&buffer[offset]);
-		offset += 8;
+		offset += sizeof(uint64_t);
 		return ret;
 	}
 
 	float readFloat(uint8_t* buffer) {
 		float ret = *(float*)(&buffer[offset]);
-		offset += 4;
+		offset += sizeof(float);
 		return ret;
 	}
 
 	double readDouble(uint8_t* buffer) {
 		double ret = *(double*)(&buffer[offset]);
-		offset += 8;
+		offset += sizeof(double);
 		return ret;
 	}
 
