@@ -40,13 +40,13 @@ namespace LOCK {
 	}
 
 	uint32_t read32(uint8_t* buffer) {
-		uint16_t ret = *(uint16_t*)(&buffer[offset]);
+		uint32_t ret = *(uint32_t*)(&buffer[offset]);
 		offset += 4;
 		return ret;
 	}
 
 	uint64_t read64(uint8_t* buffer) {
-		uint16_t ret = *(uint16_t*)(&buffer[offset]);
+		uint64_t ret = *(uint64_t*)(&buffer[offset]);
 		offset += 8;
 		return ret;
 	}
@@ -63,7 +63,7 @@ namespace LOCK {
 		return ret;
 	}
 
-	int64_t getAddress(uint8_t* buffer, uint8_t offsets_count) {
+	int64_t __attribute__ ((noinline)) getAddress(uint8_t* buffer, uint8_t offsets_count) {
 		
 		uint64_t address = main_address;
 		for (int i = 0; i < offsets_count; i++) {
@@ -98,7 +98,8 @@ namespace LOCK {
 	Result applyPatch(uint8_t* buffer, size_t filesize, uint8_t FPS) {
 		FPS -= 15;
 		FPS /= 5;
-		offset = *(uint32_t*)buffer[FPS+1];
+		FPS *= 4;
+		offset = *(uint32_t*)(&buffer[FPS+4]);
 		int8_t OPCODE = read8(buffer); // 0 - err, 1 - write, 2 - compare, -1 = endExecution
 		if (OPCODE == 1) {
 			uint8_t offsets_count = read8(buffer);
@@ -160,6 +161,7 @@ namespace LOCK {
 					uint8_t uint8_compare = *(uint8_t*)address;
 					uint8_t uint8_tocompare = read8(buffer);
 					passed = compareValues(uint8_compare, uint8_tocompare, compare_type);
+					break;
 				}
 				case 2: {
 					uint16_t uint16_compare = *(uint16_t*)address;
@@ -183,6 +185,7 @@ namespace LOCK {
 					int8_t int8_compare = *(int8_t*)address;
 					int8_t int8_tocompare = (int8_t)read8(buffer);
 					passed = compareValues(int8_compare, int8_tocompare, compare_type);
+					break;
 				}
 				case 0x12: {
 					int16_t int16_compare = *(int16_t*)address;

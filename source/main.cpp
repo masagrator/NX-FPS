@@ -22,23 +22,6 @@ extern "C" {
 	extern u32 vkQueuePresentKHR(void* vk_unk1, void* vk_unk2) LINKABLE;
 }
 
-Result readConfig(const char* path, uint8_t** output_buffer) {
-	FILE* patch_file = SaltySDCore_fopen(path, "rb");
-	SaltySDCore_fseek(patch_file, 0, 2);
-	size_t filesize = SaltySDCore_ftell(patch_file);
-	SaltySDCore_fclose(patch_file);
-	uint8_t* buffer = (uint8_t*)calloc(1, filesize);
-	patch_file = SaltySDCore_fopen(path, "r");
-	SaltySDCore_fread(buffer, filesize, 1, patch_file);
-	SaltySDCore_fclose(patch_file);
-	if (LOCK::isValid(buffer, filesize)) {
-		free(buffer);
-		return 1;
-	}
-	*output_buffer = buffer;
-	return 0;
-}
-
 u32 __nx_applet_type = AppletType_None;
 Handle orig_main_thread;
 void* orig_ctx;
@@ -47,6 +30,26 @@ SharedMemory _sharedmemory = {};
 Handle remoteSharedMemory = 0;
 ptrdiff_t SharedMemoryOffset = 1234;
 uint8_t* configBuffer = 0;
+size_t configSize = 0;
+Result configRC = 0;
+
+
+Result readConfig(const char* path, uint8_t** output_buffer) {
+	FILE* patch_file = SaltySDCore_fopen(path, "rb");
+	SaltySDCore_fseek(patch_file, 0, 2);
+	configSize = SaltySDCore_ftell(patch_file);
+	SaltySDCore_fclose(patch_file);
+	uint8_t* buffer = (uint8_t*)calloc(1, configSize);
+	patch_file = SaltySDCore_fopen(path, "r");
+	SaltySDCore_fread(buffer, configSize, 1, patch_file);
+	SaltySDCore_fclose(patch_file);
+	if (LOCK::isValid(buffer, configSize)) {
+		free(buffer);
+		return 1;
+	}
+	*output_buffer = buffer;
+	return 0;
+}
 
 void __libnx_init(void* ctx, Handle main_thread, void* saved_lr) {
 	extern char* fake_heap_start;
@@ -295,6 +298,8 @@ void nvnPresentTexture(void* _this, void* unk2, void* unk3) {
 		FPS = FPS_temp - 1;
 		FPS_temp = 0;
 		*FPS_shared = FPS;
+		if (changeFPS && !configRC && FPSlock)
+			LOCK::applyPatch(configBuffer, configSize, FPSlock);
 	}
 
 	*FPSavg_shared = FPSavg;
@@ -425,8 +430,8 @@ int main(int argc, char *argv[]) {
 				if (patch_file) {
 					SaltySDCore_fclose(patch_file);
 					SaltySDCore_printf("NX-FPS: FPSLocker: successfully opened: %s\n", path);
-					Result rc = readConfig(path, &configBuffer);
-					SaltySDCore_printf("NX-FPS: FPSLocker: readConfig rc: %d\n", rc);
+					Result configRC = readConfig(path, &configBuffer);
+					SaltySDCore_printf("NX-FPS: FPSLocker: readConfig rc: %d\n", configRC);
 				}
 				else SaltySDCore_printf("NX-FPS: FPSLocker: File not found: %s\n", path);
 			}
