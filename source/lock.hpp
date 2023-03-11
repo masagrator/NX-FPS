@@ -63,15 +63,24 @@ namespace LOCK {
 		return ret;
 	}
 
+	bool isAddressValid(int64_t address) {
+		MemoryInfo memoryinfo = {0};
+		u32 pageinfo = 0;
+
+		Result rc = svcQueryMemory(&memoryinfo, &pageinfo, address);
+		if (R_FAILED(rc)) return false;
+		if ((memoryinfo.perm & Perm_Rw) && ((address - memoryinfo.addr >= 0) && (address - memoryinfo.addr <= memoryinfo.size)))
+			return true;
+		return false;
+	}
+
 	int64_t __attribute__ ((noinline)) getAddress(uint8_t* buffer, uint8_t offsets_count) {
-		
 		uint64_t address = main_address;
 		for (int i = 0; i < offsets_count; i++) {
 			int32_t temp_offset = (int32_t)read32(buffer);
 			address += temp_offset;
 			if (i+1 < offsets_count) {
-				if (!*(uint64_t*)address)
-					return -2;
+				if (!isAddressValid(*(int64_t*)address)) return -2;
 				address = *(uint64_t*)address;
 			}
 		}
