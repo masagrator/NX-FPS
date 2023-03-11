@@ -6,10 +6,10 @@
 
 namespace LOCK {
 
-	int64_t main_address = 0;
 	uint32_t offset = 0;
 
 	struct {
+		int64_t main_start;
 		uint64_t alias_start;
 		uint64_t heap_start;
 	} mappings;
@@ -87,7 +87,7 @@ namespace LOCK {
 	}
 
 	int64_t NOINLINE getAddress(uint8_t* buffer, uint8_t offsets_count) {
-		int64_t address = main_address;
+		int64_t address = mappings.main_start;
 		for (int i = 0; i < offsets_count; i++) {
 			int32_t temp_offset = (int32_t)read32(buffer);
 			address += temp_offset;

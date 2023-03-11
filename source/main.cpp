@@ -373,7 +373,7 @@ uintptr_t nvnBootstrapLoader_1(const char* nvnName) {
 
 int main(int argc, char *argv[]) {
 	SaltySDCore_printf("NX-FPS: alive\n");
-	LOCK::main_address = SaltySDCore_getCodeStart() + 0x4000;
+	LOCK::mappings.main_start = SaltySDCore_getCodeStart() + 0x4000;
 	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 14);
 	SaltySDCore_printf("NX-FPS: ret: 0x%X\n", ret);
 	if (!ret) {
