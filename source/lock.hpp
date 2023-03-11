@@ -159,18 +159,18 @@ namespace LOCK {
 				case 1: {
 					uint8_t uint8_compare = *(uint8_t*)address;
 					uint8_t uint8_tocompare = read8(buffer);
-					passed = compareValues((uint64_t)uint8_compare, (uint64_t)uint8_tocompare, compare_type);
+					passed = compareValues(uint8_compare, uint8_tocompare, compare_type);
 				}
 				case 2: {
 					uint16_t uint16_compare = *(uint16_t*)address;
 					uint16_t uint16_tocompare = read16(buffer);
-					passed = compareValues((uint64_t)uint16_compare, (uint64_t)uint16_tocompare, compare_type);
+					passed = compareValues(uint16_compare, uint16_tocompare, compare_type);
 					break;
 				}
 				case 4: {
 					uint32_t uint32_compare = *(uint32_t*)address;
 					uint32_t uint32_tocompare = read32(buffer);
-					passed = compareValues((uint64_t)uint32_compare, (uint64_t)uint32_tocompare, compare_type);
+					passed = compareValues(uint32_compare, uint32_tocompare, compare_type);
 					break;
 				}
 				case 8: {
@@ -182,18 +182,18 @@ namespace LOCK {
 				case 0x11: {
 					int8_t int8_compare = *(int8_t*)address;
 					int8_t int8_tocompare = (int8_t)read8(buffer);
-					passed = compareValues((int64_t)int8_compare, (int64_t)int8_tocompare, compare_type);
+					passed = compareValues(int8_compare, int8_tocompare, compare_type);
 				}
 				case 0x12: {
 					int16_t int16_compare = *(int16_t*)address;
 					int16_t int16_tocompare = (int16_t)read16(buffer);
-					passed = compareValues((int64_t)int16_compare, (int64_t)int16_tocompare, compare_type);
+					passed = compareValues(int16_compare, int16_tocompare, compare_type);
 					break;
 				}
 				case 0x14: {
 					int32_t int32_compare = *(int32_t*)address;
 					int32_t int32_tocompare = (int32_t)read32(buffer);
-					passed = compareValues((int64_t)int32_compare, (int64_t)int32_tocompare, compare_type);
+					passed = compareValues(int32_compare, int32_tocompare, compare_type);
 					break;
 				}
 				case 0x18: {
