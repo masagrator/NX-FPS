@@ -9,6 +9,11 @@ namespace LOCK {
 	int64_t main_address = 0;
 	uint32_t offset = 0;
 
+	struct {
+		uint64_t alias_start;
+		uint64_t heap_start;
+	} mappings;
+
 	template <typename T>
 	bool compareValues(T value1, T value2, uint8_t compare_type) { // 1 - >, 2 - >=, 3 - <, 4 - <=, 5 - ==, 6 - !=
 		switch(compare_type) {

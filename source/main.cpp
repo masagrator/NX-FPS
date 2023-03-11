@@ -433,6 +433,8 @@ int main(int argc, char *argv[]) {
 					SaltySDCore_printf("NX-FPS: FPSLocker: successfully opened: %s\n", path);
 					Result configRC = readConfig(path, &configBuffer);
 					SaltySDCore_printf("NX-FPS: FPSLocker: readConfig rc: %d\n", configRC);
+					svcGetInfo(&LOCK::mappings.alias_start, InfoType_AliasRegionAddress, CUR_PROCESS_HANDLE, 0);
+					svcGetInfo(&LOCK::mappings.heap_start, InfoType_HeapRegionAddress, CUR_PROCESS_HANDLE, 0);
 				}
 				else SaltySDCore_printf("NX-FPS: FPSLocker: File not found: %s\n", path);
 			}
