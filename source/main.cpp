@@ -4,12 +4,11 @@
 #include "saltysd/SaltySD_core.h"
 #include "ltoa.h"
 #include <cstdlib>
-#include "lock.hpp"
 
 extern "C" {
 	extern u32 __start__;
 
-	static char g_heap[0x10000];
+	static char g_heap[0x8000];
 
 	void __libnx_init(void* ctx, Handle main_thread, void* saved_lr);
 	void __attribute__((weak)) NORETURN __libnx_exit(int rc);
@@ -29,27 +28,6 @@ void* orig_saved_lr;
 SharedMemory _sharedmemory = {};
 Handle remoteSharedMemory = 0;
 ptrdiff_t SharedMemoryOffset = 1234;
-uint8_t* configBuffer = 0;
-size_t configSize = 0;
-Result configRC = 0;
-
-
-Result readConfig(const char* path, uint8_t** output_buffer) {
-	FILE* patch_file = SaltySDCore_fopen(path, "rb");
-	SaltySDCore_fseek(patch_file, 0, 2);
-	configSize = SaltySDCore_ftell(patch_file);
-	SaltySDCore_fclose(patch_file);
-	uint8_t* buffer = (uint8_t*)calloc(1, configSize);
-	patch_file = SaltySDCore_fopen(path, "r");
-	SaltySDCore_fread(buffer, configSize, 1, patch_file);
-	SaltySDCore_fclose(patch_file);
-	if (LOCK::isValid(buffer, configSize)) {
-		free(buffer);
-		return 1;
-	}
-	*output_buffer = buffer;
-	return 0;
-}
 
 void __libnx_init(void* ctx, Handle main_thread, void* saved_lr) {
 	extern char* fake_heap_start;
@@ -112,26 +90,6 @@ typedef void (*nvnSetPresentInterval_0)(void* _this, int mode);
 typedef void (*nvnBuilderSetPresentInterval_0)(void* _this, int mode);
 typedef void* (*nvnAcquireTexture_0)(void* _this, void* x1, int w2);
 typedef void* (*nvnSyncWait_0)(void* _this, uint64_t timeout_ns);
-
-inline void createBuildidPath(uint64_t buildid, char* titleid, char* buffer) {
-	strcpy(buffer, "sdmc:/SaltySD/plugins/FPSLocker/patches/0");
-	strcat(buffer, &titleid[0]);
-	strcat(buffer, "/");
-	ltoa(buildid, &titleid[0], 16);
-	if (strlen(&titleid[0]) < 16) {
-		size_t length = strlen(&titleid[0]);
-		int zero_count = 15 - length;
-		char* temp = (char*)calloc(1, 0x11);
-		strcpy(&temp[zero_count], &titleid[0]);
-		for (int i = 0; i < (zero_count + 1); i++) {
-			temp[i] = 0x30;
-		}
-		strncpy(&titleid[0], temp, 16);
-		free(temp);
-	}
-	strcat(buffer, &titleid[0]);
-	strcat(buffer, ".bin");	
-}
 
 inline void CheckTitleID(char* buffer) {
     uint64_t titid = 0;
@@ -298,8 +256,6 @@ void nvnPresentTexture(void* _this, void* unk2, void* unk3) {
 		FPS = FPS_temp - 1;
 		FPS_temp = 0;
 		*FPS_shared = FPS;
-		if (changeFPS && !configRC && FPSlock)
-			LOCK::applyPatch(configBuffer, configSize, FPSlock);
 	}
 
 	*FPSavg_shared = FPSavg;
@@ -373,7 +329,6 @@ uintptr_t nvnBootstrapLoader_1(const char* nvnName) {
 
 int main(int argc, char *argv[]) {
 	SaltySDCore_printf("NX-FPS: alive\n");
-	LOCK::main_address = SaltySDCore_getCodeStart() + 0x4000;
 	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 13);
 	SaltySDCore_printf("NX-FPS: ret: 0x%X\n", ret);
 	if (!ret) {
@@ -405,7 +360,7 @@ int main(int argc, char *argv[]) {
 
 			char titleid[17];
 			CheckTitleID(&titleid[0]);
-			char path[128];
+			char path[64];
 			strcpy(&path[0], "sdmc:/SaltySD/plugins/FPSLocker/0");
 			strcat(&path[0], &titleid[0]);
 			strcat(&path[0], ".dat");
@@ -417,23 +372,6 @@ int main(int argc, char *argv[]) {
 				SaltySDCore_fread(&temp, 1, 1, file_dat);
 				*ZeroSync_shared = (bool)temp;
 				SaltySDCore_fclose(file_dat);
-			}
-
-			u64 buildid = SaltySD_GetBID();
-			if (!buildid) {
-				SaltySDCore_printf("NX-FPS: getBID failed! Err: 0x%x\n", ret);
-			}
-			else {
-				SaltySDCore_printf("NX-FPS: BID: %016lX\n", buildid);
-				createBuildidPath(buildid, &titleid[0], &path[0]);
-				FILE* patch_file = SaltySDCore_fopen(path, "r");
-				if (patch_file) {
-					SaltySDCore_fclose(patch_file);
-					SaltySDCore_printf("NX-FPS: FPSLocker: successfully opened: %s\n", path);
-					Result configRC = readConfig(path, &configBuffer);
-					SaltySDCore_printf("NX-FPS: FPSLocker: readConfig rc: %d\n", configRC);
-				}
-				else SaltySDCore_printf("NX-FPS: FPSLocker: File not found: %s\n", path);
 			}
 		}
 		else {
