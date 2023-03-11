@@ -70,6 +70,12 @@ namespace LOCK {
 		return ret;
 	}
 
+	template <typename T>
+	void writeValue(T value, int64_t address) {
+		if (*(T*)address != value)
+			*(T*)address = value;
+	}
+
 	bool unsafeCheck = false;
 
 	bool NOINLINE isAddressValid(int64_t address) {
@@ -281,7 +287,7 @@ namespace LOCK {
 					case 0x11: {
 						for (uint8_t i = 0; i < loops; i++) {
 							uint8_t value8 = read8(buffer);
-							if (passed) *(uint8_t*)address = value8;
+							if (passed) writeValue(value8, address);
 							address += 1;
 						}
 						break;
@@ -290,7 +296,7 @@ namespace LOCK {
 					case 0x12: {
 						for (uint8_t i = 0; i < loops; i++) {
 							uint16_t value16 = read16(buffer);
-							if (passed) *(uint16_t*)address = value16;
+							if (passed) writeValue(value16, address);
 							address += 2;
 						}
 						break;
@@ -300,7 +306,7 @@ namespace LOCK {
 					case 0x24: {
 						for (uint8_t i = 0; i < loops; i++) {
 							uint32_t value32 = read32(buffer);
-							if (passed) *(uint32_t*)address = value32;
+							if (passed) writeValue(value32, address);
 							address += 4;
 						}
 						break;
@@ -310,7 +316,7 @@ namespace LOCK {
 					case 0x28: {
 						for (uint8_t i = 0; i < loops; i++) {
 							uint64_t value64 = read64(buffer);
-							if (passed) *(uint64_t*)address = value64;
+							if (passed) writeValue(value64, address);
 							address += 8;
 						}
 						break;
