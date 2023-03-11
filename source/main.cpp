@@ -278,7 +278,7 @@ void nvnPresentTexture(void* _this, void* unk2, void* unk3) {
 	static uint32_t FPStiming = 0;
 
 	if (!starttick) starttick = _ZN2nn2os13GetSystemTickEv();
-	if (FPStiming) {
+	if (FPStiming && !LOCK::blockDelayFPS) {
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
 			svcSleepThread(100000);
 		}
