@@ -32,11 +32,9 @@ Result readConfig(const char* path, uint8_t** output_buffer) {
 	SaltySDCore_fread(buffer, filesize, 1, patch_file);
 	SaltySDCore_fclose(patch_file);
 	if (LOCK::isValid(buffer, filesize)) {
-		SaltySDCore_printf("NX-FPS: patch loaded unsuccessfully!\n");
 		free(buffer);
 		return 1;
 	}
-	SaltySDCore_printf("NX-FPS: successfully loaded patch!\n");
 	*output_buffer = buffer;
 	return 0;
 }
@@ -426,11 +424,11 @@ int main(int argc, char *argv[]) {
 				FILE* patch_file = SaltySDCore_fopen(path, "r");
 				if (patch_file) {
 					SaltySDCore_fclose(patch_file);
-					SaltySDCore_printf("NX-FPS: successfully opened BID path: %s\n", path);
+					SaltySDCore_printf("NX-FPS: FPSLocker: successfully opened: %s\n", path);
 					Result rc = readConfig(path, &configBuffer);
-					SaltySDCore_printf("NX-FPS: readConfig rc: %d\n", rc);
+					SaltySDCore_printf("NX-FPS: FPSLocker: readConfig rc: %d\n", rc);
 				}
-				else SaltySDCore_printf("NX-FPS: Wrong BID path: %s\n", path);
+				else SaltySDCore_printf("NX-FPS: FPSLocker: File not found: %s\n", path);
 			}
 		}
 		else {
