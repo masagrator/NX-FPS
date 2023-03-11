@@ -374,7 +374,7 @@ uintptr_t nvnBootstrapLoader_1(const char* nvnName) {
 int main(int argc, char *argv[]) {
 	SaltySDCore_printf("NX-FPS: alive\n");
 	LOCK::mappings.main_start = SaltySDCore_getCodeStart() + 0x4000;
-	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 14);
+	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 13);
 	SaltySDCore_printf("NX-FPS: ret: 0x%X\n", ret);
 	if (!ret) {
 		SaltySDCore_printf("NX-FPS: MemoryOffset: %d\n", SharedMemoryOffset);
@@ -398,7 +398,6 @@ int main(int argc, char *argv[]) {
 			FPSlocked_shared = (uint8_t*)(base + 10);
 			FPSmode_shared = (uint8_t*)(base + 11);
 			ZeroSync_shared = (bool*)(base + 12);
-			LOCK::unsafeCheck = (bool*)(base + 13);
 			addr_nvnBuilderSetPresentInterval = (uint64_t)&nvnBuilderSetPresentInterval;
 			addr_nvnSetPresentInterval = (uint64_t)&nvnSetPresentInterval;
 			addr_nvnAcquireTexture = (uint64_t)&nvnAcquireTexture;
