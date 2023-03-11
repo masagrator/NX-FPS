@@ -181,6 +181,15 @@ def processData(file, size):
 				entry["value_type"] = GetValueType(file)
 				entry["value"] = GetValue(file, entry["value_type"])
 				ret_list.append(entry)
+			case 3:
+				entry["type"] = "block"
+				what = int.from_bytes(file.read(1), "little")
+				match(what):
+					case 1:
+						entry["what"] = "timing"
+					case _:
+						print("Unknown 'what' %d in 'block' opcode at offset: 0x%x" % (what, file.tell()-1))
+				ret_list.append(entry)
 			case -1:
 				return ret_list
 			case _:

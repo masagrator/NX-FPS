@@ -183,6 +183,14 @@ for i in range(len(OBJECTS)):
 						continue
 					entry.append(DICT[OBJECTS[i]][x]["address"][y].to_bytes(4, "little", signed=True))
 				entry.append(returnValue(DICT[OBJECTS[i]][x]["value_type"], DICT[OBJECTS[i]][x]["value"]))
+			case "block":
+				entry.append(b"\x03")
+				match(entry["what"]):
+					case "timing":
+						entry.append(b"\x01")
+					case _:
+						print("Unknown block type: %s" % entry["what"])
+						sys.exit()
 			case _:
 				print(f"Unknown type of patch at {OBJECTS[i]}!")
 				print(DICT[OBJECTS[i]])

@@ -25,6 +25,9 @@ unsafeCheck: false
     address: [MAIN, 0x1F8076, -0x34, 4]
     value_type: "double"
     value: 66.6666666666
+  - 
+    type: block
+    what: timing
 20FPS:
   -
     type: write
