@@ -185,7 +185,7 @@ for i in range(len(OBJECTS)):
 				entry.append(returnValue(DICT[OBJECTS[i]][x]["value_type"], DICT[OBJECTS[i]][x]["value"]))
 			case "block":
 				entry.append(b"\x03")
-				match(entry["what"]):
+				match(DICT[OBJECTS[i]][x]["what"]):
 					case "timing":
 						entry.append(b"\x01")
 					case _:
