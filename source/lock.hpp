@@ -8,61 +8,8 @@ namespace LOCK {
 	uint64_t main_address = 0;
 	uint32_t offset = 0;
 
-	bool compareValues(uint64_t value1, uint64_t value2, uint8_t compare_type) { // 1 - >, 2 - >=, 3 - <, 4 - <=, 5 - ==, 6 - !=
-		switch(compare_type) {
-			case 1:
-				return (value1 > value2);
-			case 2:
-				return (value1 >= value2);
-			case 3:
-				return (value1 < value2);
-			case 4:
-				return (value1 <= value2);
-			case 5:
-				return (value1 == value2);
-			case 6:
-				return (value1 != value2);
-		}
-		return false;
-	}
-
-	bool compareValues(int64_t value1, int64_t value2, uint8_t compare_type) { // 1 - >, 2 - >=, 3 - <, 4 - <=, 5 - ==, 6 - !=
-		switch(compare_type) {
-			case 1:
-				return (value1 > value2);
-			case 2:
-				return (value1 >= value2);
-			case 3:
-				return (value1 < value2);
-			case 4:
-				return (value1 <= value2);
-			case 5:
-				return (value1 == value2);
-			case 6:
-				return (value1 != value2);
-		}
-		return false;
-	}
-
-	bool compareValues(float value1, float value2, uint8_t compare_type) { // 1 - >, 2 - >=, 3 - <, 4 - <=, 5 - ==, 6 - !=
-		switch(compare_type) {
-			case 1:
-				return (value1 > value2);
-			case 2:
-				return (value1 >= value2);
-			case 3:
-				return (value1 < value2);
-			case 4:
-				return (value1 <= value2);
-			case 5:
-				return (value1 == value2);
-			case 6:
-				return (value1 != value2);
-		}
-		return false;
-	}
-
-	bool compareValues(double value1, double value2, uint8_t compare_type) { // 1 - >, 2 - >=, 3 - <, 4 - <=, 5 - ==, 6 - !=
+	template <typename T>
+	bool compareValues(T value1, T value2, uint8_t compare_type) { // 1 - >, 2 - >=, 3 - <, 4 - <=, 5 - ==, 6 - !=
 		switch(compare_type) {
 			case 1:
 				return (value1 > value2);
