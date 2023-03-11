@@ -87,7 +87,19 @@ namespace LOCK {
 	}
 
 	int64_t NOINLINE getAddress(uint8_t* buffer, uint8_t offsets_count) {
-		int64_t address = mappings.main_start;
+		uint8_t region = read8(buffer);
+		offsets_count -= 1;
+		int64_t address = 0;
+		switch(region) {
+			case 1:
+				address = mappings.main_start;
+			case 2:
+				address = mappings.heap_start;	
+			case 3:
+				address = mappings.alias_start;
+			default:
+				return -1;
+		}
 		for (int i = 0; i < offsets_count; i++) {
 			int32_t temp_offset = (int32_t)read32(buffer);
 			address += temp_offset;
