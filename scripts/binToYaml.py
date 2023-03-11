@@ -122,6 +122,19 @@ def processData(file, size):
 				entry["address"] = []
 				address_count = int.from_bytes(file.read(1), "little", signed=True)
 				for i in range(address_count):
+					if (i == 0):
+						REGION = int.from_bytes(file.read(1), "little", signed=True)
+						match(REGION):
+							case 1:
+								entry["address"].append("MAIN")
+							case 2:
+								entry["address"].append("HEAP")
+							case 3:
+								entry["address"].append("ALIAS")
+							case _:
+								print("UNKNOWN REGION %d at offset 0x%x" % (REGION, file.tell()-1))
+								sys.exit()
+						continue
 					entry["address"].append(int.from_bytes(file.read(4), "little", signed=True))
 				entry["value_type"] = GetValueType(file)
 				entry["value"] = GetValue(file, entry["value_type"])
@@ -131,6 +144,19 @@ def processData(file, size):
 				entry["compare_address"] = []
 				address_count = int.from_bytes(file.read(1), "little", signed=True)
 				for i in range(address_count):
+					if (i == 0):
+						REGION = int.from_bytes(file.read(1), "little", signed=True)
+						match(REGION):
+							case 1:
+								entry["compare_address"].append("MAIN")
+							case 2:
+								entry["compare_address"].append("HEAP")
+							case 3:
+								entry["compare_address"].append("ALIAS")
+							case _:
+								print("UNKNOWN REGION %d at offset 0x%x" % (REGION, file.tell()-1))
+								sys.exit()
+						continue
 					entry["compare_address"].append(int.from_bytes(file.read(4), "little", signed=True))
 				entry["compare_type"] = GetCompareType(file)
 				entry["compare_value_type"] = GetValueType(file)
@@ -138,6 +164,19 @@ def processData(file, size):
 				entry["address"] = []
 				address_count = int.from_bytes(file.read(1), "little", signed=True)
 				for i in range(address_count):
+					if (i == 0):
+						REGION = int.from_bytes(file.read(1), "little", signed=True)
+						match(REGION):
+							case 1:
+								entry["address"].append("MAIN")
+							case 2:
+								entry["address"].append("HEAP")
+							case 3:
+								entry["address"].append("ALIAS")
+							case _:
+								print("UNKNOWN REGION %d at offset 0x%x" % (REGION, file.tell()-1))
+								sys.exit()
+						continue
 					entry["address"].append(int.from_bytes(file.read(4), "little", signed=True))
 				entry["value_type"] = GetValueType(file)
 				entry["value"] = GetValue(file, entry["value_type"])

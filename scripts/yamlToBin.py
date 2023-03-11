@@ -131,6 +131,18 @@ for i in range(len(OBJECTS)):
 				address_count = len(DICT[OBJECTS[i]][x]["address"])
 				entry.append(address_count.to_bytes(1, "little"))
 				for y in range(address_count):
+					if (y == 0):
+						match(DICT[OBJECTS[i]][x]["address"][0].upper()):
+							case "MAIN":
+								entry.append(b"\x01")
+							case "HEAP":
+								entry.append(b"\x02")
+							case "ALIAS":
+								entry.append(b"\x03")
+							case _:
+								print("UNKNOWN REGION!")
+								sys.exit()
+						continue
 					entry.append(DICT[OBJECTS[i]][x]["address"][y].to_bytes(4, "little", signed=True))
 				entry.append(returnValue(DICT[OBJECTS[i]][x]["value_type"], DICT[OBJECTS[i]][x]["value"]))
 			case "compare":
@@ -138,6 +150,18 @@ for i in range(len(OBJECTS)):
 				compare_address_count = len(DICT[OBJECTS[i]][x]["compare_address"])
 				entry.append(compare_address_count.to_bytes(1, "little"))
 				for y in range(compare_address_count):
+					if (y == 0):
+						match(DICT[OBJECTS[i]][x]["compare_address"][0].upper()):
+							case "MAIN":
+								entry.append(b"\x01")
+							case "HEAP":
+								entry.append(b"\x02")
+							case "ALIAS":
+								entry.append(b"\x03")
+							case _:
+								print("UNKNOWN REGION!")
+								sys.exit()
+						continue
 					entry.append(DICT[OBJECTS[i]][x]["compare_address"][y].to_bytes(4, "little", signed=True))
 				if isinstance(DICT[OBJECTS[i]][x]["compare_value"], list) == True:
 					DICT[OBJECTS[i]][x]["compare_value"] = DICT[OBJECTS[i]][x]["compare_value"][0]
@@ -145,6 +169,18 @@ for i in range(len(OBJECTS)):
 				address_count = len(DICT[OBJECTS[i]][x]["address"])
 				entry.append(address_count.to_bytes(1, "little"))
 				for y in range(address_count):
+					if (y == 0):
+						match(DICT[OBJECTS[i]][x]["address"][0].upper()):
+							case "MAIN":
+								entry.append(b"\x01")
+							case "HEAP":
+								entry.append(b"\x02")
+							case "ALIAS":
+								entry.append(b"\x03")
+							case _:
+								print("UNKNOWN REGION!")
+								sys.exit()
+						continue
 					entry.append(DICT[OBJECTS[i]][x]["address"][y].to_bytes(4, "little", signed=True))
 				entry.append(returnValue(DICT[OBJECTS[i]][x]["value_type"], DICT[OBJECTS[i]][x]["value"]))
 			case _:
