@@ -195,7 +195,7 @@ if (file.read(4) != b"LOCK"):
 	sys.exit()
 
 gen = int.from_bytes(file.read(3), "little")
-if (gen != 0):
+if (gen != 1):
 	print("Wrong version!")
 	sys.exit()
 
@@ -206,7 +206,7 @@ OFFSETS = []
 for i in range(10):
 	OFFSETS.append(int.from_bytes(file.read(4), "little"))
 
-if OFFSETS[0] != 44:
+if OFFSETS[0] != 48:
 	print("Offset check failed!")
 	sys.exit()
 
