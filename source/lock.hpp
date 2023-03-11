@@ -69,7 +69,7 @@ namespace LOCK {
 		return ret;
 	}
 
-	bool* unsafeCheck = 0;
+	bool unsafeCheck = false;
 
 	bool NOINLINE isAddressValid(int64_t address) {
 		MemoryInfo memoryinfo = {0};
@@ -117,9 +117,16 @@ namespace LOCK {
 	bool isValid(uint8_t* buffer, size_t filesize) {
 		if (*(uint32_t*)buffer != 0x4B434F4C)
 			return false;
-		if (*(uint32_t*)(&(buffer[4])) != 44)
+		if (buffer[4] > 0)
 			return false;
-		uint32_t offset = *(uint32_t*)(&(buffer[10]));
+		if (*(uint16_t*)(&(buffer[5])) != 0)
+			return false;
+		if (buffer[7] > 1)
+			return false;
+		unsafeCheck = (bool)buffer[7];
+		if (*(uint32_t*)(&(buffer[8])) != 48)
+			return false;
+		uint32_t offset = *(uint32_t*)(&(buffer[44]));
 		if (offset > filesize)
 			return false;
 		if (buffer[filesize-1] != 0xFF)
@@ -132,7 +139,7 @@ namespace LOCK {
 		FPS -= 15;
 		FPS /= 5;
 		FPS *= 4;
-		offset = *(uint32_t*)(&buffer[FPS+4]);
+		offset = *(uint32_t*)(&buffer[FPS+8]);
 		int8_t OPCODE = read8(buffer); // 0 - err, 1 - write, 2 - compare, -1 = endExecution
 		if (OPCODE == 1) {
 			uint8_t offsets_count = read8(buffer);
