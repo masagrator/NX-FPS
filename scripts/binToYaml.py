@@ -194,6 +194,13 @@ if (file.read(4) != b"LOCK"):
 	print("WRONG MAGIC!")
 	sys.exit()
 
+gen = int.from_bytes(file.read(3), "little")
+if (gen != 0):
+	print("Wrong version!")
+	sys.exit()
+
+unsafeCheck = bool.from_bytes(file.read(1), "little")
+
 OFFSETS = []
 
 for i in range(10):
@@ -205,6 +212,8 @@ if OFFSETS[0] != 44:
 
 DICT = {}
 OBJECTS = ["15FPS", "20FPS", "25FPS", "30FPS", "35FPS", "40FPS", "45FPS", "50FPS", "55FPS", "60FPS"]
+
+DICT["unsafeCheck"] = unsafeCheck
 
 for i in range(len(OFFSETS)):
 	file.seek(OFFSETS[i])

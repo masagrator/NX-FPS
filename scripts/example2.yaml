@@ -1,3 +1,4 @@
+unsafeCheck: false
 15FPS:
   -
     type: write

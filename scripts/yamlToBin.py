@@ -192,7 +192,12 @@ for i in range(len(OBJECTS)):
 
 new_file = open(f"{Path(sys.argv[1]).stem}.bin", "wb")
 new_file.write(b"LOCK")
-base = 44
+new_file.write(b"\x01\x00\x00")
+if (DICT["unsafeCheck"] == True):
+	new_file.write(b"\x01")
+else:
+	new_file.write(b"\x00")
+base = new_file.tell() + (4 * len(OBJECTS))
 offsets = []
 NEW_DATA = []
 for i in range(len(OBJECTS)):

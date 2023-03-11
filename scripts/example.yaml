@@ -9,6 +9,7 @@
 # compare_type: ">", ">=", "<", "<=", "==", "!="
 # compare_value: integer or decimal
 
+unsafeCheck: false
 15FPS:
   -
     type: write
