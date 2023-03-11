@@ -91,12 +91,18 @@ namespace LOCK {
 		offsets_count -= 1;
 		int64_t address = 0;
 		switch(region) {
-			case 1:
+			case 1: {
 				address = mappings.main_start;
-			case 2:
-				address = mappings.heap_start;	
-			case 3:
+				break;
+			}
+			case 2: {
+				address = mappings.heap_start;
+				break;
+			}
+			case 3: {
 				address = mappings.alias_start;
+				break;
+			}
 			default:
 				return -1;
 		}
