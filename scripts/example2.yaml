@@ -1,4 +1,9 @@
+# Xenoblade Chronicles 3 1.3.0
+# BID: B76CD24AF02ACEA2
+
 unsafeCheck: false
+
+# For 15-30 FPS set default value
 15FPS:
   -
     type: write
@@ -23,6 +28,8 @@ unsafeCheck: false
     address: [MAIN, 0x1A08F98]
     value_type: int32
     value: [2, 2]
+
+# For 35-60 FPS check if cutscene is played. If it is, set 30 FPS lock. If not, disable it.
 35FPS:
   -
     type: compare
@@ -127,7 +134,7 @@ unsafeCheck: false
     compare_value: 1
     address: [MAIN, 0x1A08F98]
     value_type: int32
-    value: [1, 1]
+    value: [-1, -1]
   -
     type: compare
     compare_address: [MAIN, 0x1A65958]
