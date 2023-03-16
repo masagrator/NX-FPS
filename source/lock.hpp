@@ -128,6 +128,8 @@ namespace LOCK {
 ///2. File format and reading
 
 	bool isValid(uint8_t* buffer, size_t filesize) {
+		if (filesize < 0x31) 
+			return false;
 		if (*(uint32_t*)buffer != 0x4B434F4C)
 			return false;
 		if (buffer[4] != 1)
