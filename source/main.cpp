@@ -153,7 +153,7 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 	
 	if (!starttick)
 		starttick = _ZN2nn2os13GetSystemTickEv();
-	if (FPStiming) {
+	if (FPStiming && !LOCK::blockDelayFPS) {
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
 			svcSleepThread(100000);
 		}
@@ -206,7 +206,7 @@ void eglSwap (void* egl_unk1_1, void* egl_unk2_1) {
 
 	if (!starttick)
 		starttick = _ZN2nn2os13GetSystemTickEv();
-	if (FPStiming) {
+	if (FPStiming && !LOCK::blockDelayFPS) {
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
 			svcSleepThread(100000);
 		}
@@ -446,7 +446,7 @@ int main(int argc, char *argv[]) {
 				if (patch_file) {
 					SaltySDCore_fclose(patch_file);
 					SaltySDCore_printf("NX-FPS: FPSLocker: successfully opened: %s\n", path);
-					Result configRC = readConfig(path, &configBuffer);
+					configRC = readConfig(path, &configBuffer);
 					SaltySDCore_printf("NX-FPS: FPSLocker: readConfig rc: %d\n", configRC);
 					svcGetInfo(&LOCK::mappings.alias_start, InfoType_AliasRegionAddress, CUR_PROCESS_HANDLE, 0);
 					svcGetInfo(&LOCK::mappings.heap_start, InfoType_HeapRegionAddress, CUR_PROCESS_HANDLE, 0);
