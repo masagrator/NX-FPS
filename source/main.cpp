@@ -31,7 +31,7 @@ Handle remoteSharedMemory = 0;
 ptrdiff_t SharedMemoryOffset = 1234;
 uint8_t* configBuffer = 0;
 size_t configSize = 0;
-Result configRC = 0;
+Result configRC = 1;
 
 
 Result readConfig(const char* path, uint8_t** output_buffer) {
@@ -442,7 +442,7 @@ int main(int argc, char *argv[]) {
 			else {
 				SaltySDCore_printf("NX-FPS: BID: %016lX\n", buildid);
 				createBuildidPath(buildid, &titleid[0], &path[0]);
-				FILE* patch_file = SaltySDCore_fopen(path, "r");
+				FILE* patch_file = SaltySDCore_fopen(path, "rb");
 				if (patch_file) {
 					SaltySDCore_fclose(patch_file);
 					SaltySDCore_printf("NX-FPS: FPSLocker: successfully opened: %s\n", path);
