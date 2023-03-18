@@ -1,0 +1,165 @@
+# type: write, compare
+# address: always list (between [ and ]), first address is always an offset from MAIN
+# value_type: int8, uint8, int16, uint16, int32, uint32, int64, uint64, float, double
+# value: integer or decimal, supports list (between [ and ], then each number is stored in RAM one after another)
+#
+# /*compare type exclusive
+# /*value read from compare_address is a left operand, compare_value is right operand
+# compare_address: always list (between [ and ]), first address is always an offset from MAIN
+# compare_type: ">", ">=", "<", "<=", "==", "!="
+# compare_value: integer or decimal
+
+unsafeCheck: false
+15FPS:
+  -
+    type: write
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "int32"
+    value: 2
+  -
+    type: compare
+    compare_address: [MAIN, 0x1F8076, 0x34, 1]
+    compare_type: "!="
+    compare_value_type: float
+    compare_value: 10.0
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "double"
+    value: 66.6666666666
+  - 
+    type: block
+    what: timing
+20FPS:
+  -
+    type: write
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "int32"
+    value: 2
+  -
+    type: compare
+    compare_address: [MAIN, 0x1F8076, 0x34, 1]
+    compare_type: "!="
+    compare_value_type: float
+    compare_value: 10.0
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "double"
+    value: 50
+25FPS:
+  -
+    type: write
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "int32"
+    value: 2
+  -
+    type: compare
+    compare_address: [MAIN, 0x1F8076, 0x34, 1]
+    compare_type: "!="
+    compare_value_type: float
+    compare_value: 10.0
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "double"
+    value: 40
+30FPS:
+  -
+    type: write
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "int32"
+    value: 2
+  -
+    type: compare
+    compare_address: [MAIN, 0x1F8076, 0x34, 1]
+    compare_type: "!="
+    compare_value_type: float
+    compare_value: 10.0
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "double"
+    value: 33.33333333333333
+35FPS:
+  -
+    type: write
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "int32"
+    value: 1
+  -
+    type: compare
+    compare_address: [MAIN, 0x1F8076, 0x34, 1]
+    compare_type: "!="
+    compare_value_type: float
+    compare_value: 10.0
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "double"
+    value: 28.5714285714
+40FPS:
+  -
+    type: write
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "int32"
+    value: 1
+  -
+    type: compare
+    compare_address: [MAIN, 0x1F8076, 0x34, 1]
+    compare_type: "!="
+    compare_value_type: float
+    compare_value: 10.0
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "double"
+    value: 25
+45FPS:
+  -
+    type: write
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "int32"
+    value: 1
+  -
+    type: compare
+    compare_address: [MAIN, 0x1F8076, 0x34, 1]
+    compare_type: "!="
+    compare_value_type: float
+    compare_value: 10.0
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "double"
+    value: 22.2222222222
+50FPS:
+  -
+    type: write
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "int32"
+    value: 1
+  -
+    type: compare
+    compare_address: [MAIN, 0x1F8076, 0x34, 1]
+    compare_type: "!="
+    compare_value_type: float
+    compare_value: 10.0
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "double"
+    value: 20
+55FPS:
+  -
+    type: write
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "int32"
+    value: 1
+  -
+    type: compare
+    compare_address: [MAIN, 0x1F8076, 0x34, 1]
+    compare_type: "!="
+    compare_value_type: float
+    compare_value: 10.0
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "double"
+    value: 18.1818181818
+60FPS:
+  -
+    type: write
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "int32"
+    value: 1
+  -
+    type: compare
+    compare_address: [MAIN, 0x1F8076, 0x34, 1]
+    compare_type: "!="
+    compare_value_type: float
+    compare_value: 10.0
+    address: [MAIN, 0x1F8076, -0x34, 4]
+    value_type: "double"
+    value: 16.6666666666666
