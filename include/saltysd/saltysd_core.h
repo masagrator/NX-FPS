@@ -16,8 +16,8 @@ extern "C" {
 	size_t SaltySDCore_fwrite(const void *ptr, size_t size, size_t count, FILE *stream) LINKABLE;
 	extern int SaltySDCore_remove(const char* filename) LINKABLE;
 	Result SaltySDCore_printf(const char* format, ...) LINKABLE;
-	int SaltySDCore_fclose(FILE* stream) LINKABLE;
 	int SaltySDCore_fseek(FILE* stream, int64_t offset, int origin) LINKABLE;
+	int64_t SaltySDCore_ftell(FILE* stream) LINKABLE;
 }
 
 #endif // SALTYSD_CORE_H
