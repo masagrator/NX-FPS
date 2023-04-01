@@ -143,6 +143,23 @@ inline void CheckTitleID(char* buffer) {
     ltoa(titid, buffer, 16);
 }
 
+inline uint64_t getMainAddress() {
+	MemoryInfo memoryinfo = {0};
+	u32 pageinfo = 0;
+
+	uint64_t base_address = SaltySDCore_getCodeStart() + 0x4000;
+	Result rc = svcQueryMemory(&memoryinfo, &pageinfo, base_address);
+	if (R_FAILED(rc)) return 0;
+	if ((memoryinfo.addr == base_address) && (memoryinfo.perm & Perm_Rx))
+		return base_address;
+	base_address = memoryinfo.addr+memoryinfo.size;
+	rc = svcQueryMemory(&memoryinfo, &pageinfo, base_address);
+	if (R_FAILED(rc)) return 0;
+	if ((memoryinfo.addr == base_address) && (memoryinfo.perm & Perm_Rx))
+		return base_address;
+	else return 0;
+}
+
 uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 	static uint8_t FPS_temp = 0;
 	static uint64_t starttick = 0;
@@ -399,7 +416,7 @@ uintptr_t nvnBootstrapLoader_1(const char* nvnName) {
 
 int main(int argc, char *argv[]) {
 	SaltySDCore_printf("NX-FPS: alive\n");
-	LOCK::mappings.main_start = SaltySDCore_getCodeStart() + 0x4000;
+	LOCK::mappings.main_start = getMainAddress();
 	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 14);
 	SaltySDCore_printf("NX-FPS: ret: 0x%X\n", ret);
 	if (!ret) {
