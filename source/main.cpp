@@ -104,14 +104,17 @@ bool FPSmode = 0;
 uintptr_t addr_nvnSetPresentInterval;
 uintptr_t addr_nvnBuilderSetPresentInterval;
 uintptr_t addr_nvnAcquireTexture;
+uintptr_t addr_nvnQAcquireTexture;
 uintptr_t addr_nvnSyncWait;
 uintptr_t ptr_nvnWindowSetPresentInterval;
 uintptr_t ptr_nvnWindowBuilderSetPresentInterval;
 uintptr_t ptr_nvnWindowAcquireTexture;
+uintptr_t ptr_nvnQueueAcquireTexture;
 uintptr_t ptr_nvnSyncWait;
 typedef void (*nvnSetPresentInterval_0)(void* _this, int mode);
 typedef void (*nvnBuilderSetPresentInterval_0)(void* _this, int mode);
 typedef void* (*nvnAcquireTexture_0)(void* _this, void* x1, int w2);
+typedef void* (*nvnQAcquireTexture_0)(void* _this, void* x1, int w2);
 typedef void* (*nvnSyncWait_0)(void* _this, uint64_t timeout_ns);
 
 inline void createBuildidPath(uint64_t buildid, char* titleid, char* buffer) {
@@ -277,6 +280,11 @@ void* nvnAcquireTexture(void* _this, void* x1, int w2) {
 	return ((nvnAcquireTexture_0)(ptr_nvnWindowAcquireTexture))(_this, x1, w2);
 }
 
+void* nvnQAcquireTexture(void* _this, void* x1, int w2) {
+	nvnWindow = x1;
+	return ((nvnQAcquireTexture_0)(ptr_nvnQueueAcquireTexture))(_this, x1, w2);
+}
+
 void nvnPresentTexture(void* _this, void* unk2, void* unk3) {
 	static uint8_t FPS_temp = 0;
 	static uint64_t starttick = 0;
@@ -368,6 +376,10 @@ uintptr_t nvnGetProcAddress (void* unk1, const char* nvnFunction) {
 		ptr_nvnWindowAcquireTexture = address;
 		return addr_nvnAcquireTexture;
 	}
+	else if (!strcmp("nvnQueueAcquireTexture", nvnFunction)) {
+		ptr_nvnQueueAcquireTexture = address;
+		return addr_nvnQAcquireTexture;
+	}
 	else if (!strcmp("nvnSyncWait", nvnFunction)) {
 		ptr_nvnSyncWait = address;
 		return addr_nvnSyncWait;
@@ -417,6 +429,7 @@ int main(int argc, char *argv[]) {
 			addr_nvnBuilderSetPresentInterval = (uint64_t)&nvnBuilderSetPresentInterval;
 			addr_nvnSetPresentInterval = (uint64_t)&nvnSetPresentInterval;
 			addr_nvnAcquireTexture = (uint64_t)&nvnAcquireTexture;
+			addr_nvnQAcquireTexture = (uint64_t)&nvnQAcquireTexture;
 			addr_nvnSyncWait = (uint64_t)&nvnSyncWait0;
 
 			char titleid[17];
