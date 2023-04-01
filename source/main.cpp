@@ -157,6 +157,11 @@ inline uint64_t getMainAddress() {
 	if (R_FAILED(rc)) return 0;
 	if ((memoryinfo.addr == base_address) && (memoryinfo.perm & Perm_Rx))
 		return base_address;
+	base_address = memoryinfo.addr+memoryinfo.size;
+	rc = svcQueryMemory(&memoryinfo, &pageinfo, base_address);
+	if (R_FAILED(rc)) return 0;
+	if ((memoryinfo.addr == base_address) && (memoryinfo.perm & Perm_Rx))
+		return base_address;
 	else return 0;
 }
 
