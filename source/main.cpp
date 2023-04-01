@@ -150,17 +150,17 @@ inline uint64_t getMainAddress() {
 	uint64_t base_address = SaltySDCore_getCodeStart() + 0x4000;
 	Result rc = svcQueryMemory(&memoryinfo, &pageinfo, base_address);
 	if (R_FAILED(rc)) return 0;
-	if ((memoryinfo.addr == base_address) && (memoryinfo.perm & Perm_Rx))
+	if ((memoryinfo.addr == base_address) && (memoryinfo.perm & Perm_X))
 		return base_address;
 	base_address = memoryinfo.addr+memoryinfo.size;
 	rc = svcQueryMemory(&memoryinfo, &pageinfo, base_address);
 	if (R_FAILED(rc)) return 0;
-	if ((memoryinfo.addr == base_address) && (memoryinfo.perm & Perm_Rx))
+	if ((memoryinfo.addr == base_address) && (memoryinfo.perm & Perm_X))
 		return base_address;
 	base_address = memoryinfo.addr+memoryinfo.size;
 	rc = svcQueryMemory(&memoryinfo, &pageinfo, base_address);
 	if (R_FAILED(rc)) return 0;
-	if ((memoryinfo.addr == base_address) && (memoryinfo.perm & Perm_Rx))
+	if ((memoryinfo.addr == base_address) && (memoryinfo.perm & Perm_X))
 		return base_address;
 	else return 0;
 }
@@ -422,6 +422,7 @@ uintptr_t nvnBootstrapLoader_1(const char* nvnName) {
 int main(int argc, char *argv[]) {
 	SaltySDCore_printf("NX-FPS: alive\n");
 	LOCK::mappings.main_start = getMainAddress();
+	SaltySDCore_printf("NX-FPS: found main at: 0x%lX\n", LOCK::mappings.main_start);
 	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 14);
 	SaltySDCore_printf("NX-FPS: ret: 0x%X\n", ret);
 	if (!ret) {
