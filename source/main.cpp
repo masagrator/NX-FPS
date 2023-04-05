@@ -18,7 +18,8 @@ extern "C" {
 	void __libc_init_array(void);
 	extern u64 nvnBootstrapLoader(const char * nvnName) LINKABLE;
 	extern u64 _ZN2nn2os13GetSystemTickEv() LINKABLE;
-	extern void eglSwapBuffers(void* egl_unk1, void* egl_unk2) LINKABLE;
+	extern int eglSwapBuffers(void* EGLDisplay, void* EGLSurface) LINKABLE;
+	extern int eglSwapInterval(void* EGLDisplay, int interval) LINKABLE;
 	extern u32 vkQueuePresentKHR(void* vk_unk1, void* vk_unk2) LINKABLE;
 }
 
@@ -98,6 +99,7 @@ void* ptr_Framebuffer = 0;
 void* nvnWindow = 0;
 bool* ZeroSync_shared = 0;
 bool* patchApplied_shared = 0;
+uint8_t* API_shared = 0;
 bool changeFPS = false;
 bool changedFPS = false;
 bool FPSmode = 0;
@@ -176,8 +178,10 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 	static uint8_t FPSlock = 0;
 	static uint32_t FPStiming = 0;
 	
-	if (!starttick)
+	if (!starttick) {
+		*API_shared = 3;
 		starttick = _ZN2nn2os13GetSystemTickEv();
+	}
 	if (FPStiming && !LOCK::blockDelayFPS) {
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
 			svcSleepThread(100000);
@@ -218,7 +222,25 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 	return vulkanResult;
 }
 
-void eglSwap (void* egl_unk1_1, void* egl_unk2_1) {
+int eglInterval(void* EGLDisplay, int interval) {
+	int result = false;
+	if (!changeFPS) {
+		result = eglSwapInterval(EGLDisplay, interval);
+		changedFPS = false;
+		*FPSmode_shared = interval;
+	}
+	else if (interval < 0) {
+		interval *= -1;
+		if (*FPSmode_shared != interval) {
+			result = eglSwapInterval(EGLDisplay, interval);
+			*FPSmode_shared = interval;
+		}
+		changedFPS = true;
+	}
+	return result;
+}
+
+int eglSwap (void* EGLDisplay, void* EGLSurface) {
 	static uint8_t FPS_temp = 0;
 	static uint64_t starttick = 0;
 	static uint64_t endtick = 0;
@@ -228,16 +250,19 @@ void eglSwap (void* egl_unk1_1, void* egl_unk2_1) {
 	static uint64_t frameavg = 0;
 	static uint8_t FPSlock = 0;
 	static uint32_t FPStiming = 0;
+	int result = 0;
 
-	if (!starttick)
+	if (!starttick) {
+		*API_shared = 2;
 		starttick = _ZN2nn2os13GetSystemTickEv();
+	}
 	if (FPStiming && !LOCK::blockDelayFPS) {
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
 			svcSleepThread(100000);
 		}
 	}
 	
-	eglSwapBuffers(egl_unk1_1, egl_unk2_1);
+	result = eglSwapBuffers(EGLDisplay, EGLSurface);
 	endtick = _ZN2nn2os13GetSystemTickEv();
 	framedelta = endtick - frameend;
 	frameavg = ((9*frameavg) + framedelta) / 10;
@@ -261,14 +286,33 @@ void eglSwap (void* egl_unk1_1, void* egl_unk2_1) {
 	*pluginActive = true;
 
 	if (FPSlock != *FPSlocked_shared) {
-		if ((*FPSlocked_shared < 60) && (*FPSlocked_shared > 0)) {
-			FPStiming = (19200000/(*FPSlocked_shared)) - 7800;
+		changeFPS = true;
+		changedFPS = false;
+		if (*FPSlocked_shared == 0) {
+			FPStiming = 0;
+			changeFPS = false;
+			FPSlock = *FPSlocked_shared;
 		}
-		else FPStiming = 0;
-		FPSlock = *FPSlocked_shared;
+		else if (*FPSlocked_shared <= 30) {
+			eglInterval(EGLDisplay, -2);
+			if (*FPSlocked_shared != 30) {
+				FPStiming = (19200000/(*FPSlocked_shared)) - 7800;
+			}
+			else FPStiming = 0;
+		}
+		else {
+			eglInterval(EGLDisplay, -1);
+			if (*FPSlocked_shared != 60) {
+				FPStiming = (19200000/(*FPSlocked_shared)) - 7800;
+			}
+			else FPStiming = 0;
+		}
+		if (changedFPS) {
+			FPSlock = *FPSlocked_shared;
+		}
 	}
 
-	return;
+	return result;
 }
 
 void nvnBuilderSetPresentInterval(void* _this, int mode) {
@@ -411,7 +455,7 @@ uintptr_t nvnGetProcAddress (void* unk1, const char* nvnFunction) {
 
 uintptr_t nvnBootstrapLoader_1(const char* nvnName) {
 	if (strcmp(nvnName, "nvnDeviceGetProcAddress") == 0) {
-		*FPSmode_shared = 0;
+		*API_shared = 1;
 		ptr_nvnDeviceGetProcAddress = nvnBootstrapLoader("nvnDeviceGetProcAddress");
 		return addr_nvnGetProcAddress;
 	}
@@ -423,7 +467,7 @@ int main(int argc, char *argv[]) {
 	SaltySDCore_printf("NX-FPS: alive\n");
 	LOCK::mappings.main_start = getMainAddress();
 	SaltySDCore_printf("NX-FPS: found main at: 0x%lX\n", LOCK::mappings.main_start);
-	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 14);
+	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 15);
 	SaltySDCore_printf("NX-FPS: ret: 0x%X\n", ret);
 	if (!ret) {
 		SaltySDCore_printf("NX-FPS: MemoryOffset: %d\n", SharedMemoryOffset);
@@ -442,13 +486,14 @@ int main(int argc, char *argv[]) {
 			addr_nvnPresentTexture = (uint64_t)&nvnPresentTexture;
 			SaltySDCore_ReplaceImport("nvnBootstrapLoader", (void*)nvnBootstrapLoader_1);
 			SaltySDCore_ReplaceImport("eglSwapBuffers", (void*)eglSwap);
+			SaltySDCore_ReplaceImport("eglSwapInterval", (void*)eglInterval);
 			SaltySDCore_ReplaceImport("vkQueuePresentKHR", (void*)vulkanSwap);
 
 			FPSlocked_shared = (uint8_t*)(base + 10);
 			FPSmode_shared = (uint8_t*)(base + 11);
-			*FPSmode_shared = 255;
 			ZeroSync_shared = (bool*)(base + 12);
 			patchApplied_shared = (bool*)(base + 13);
+			API_shared = (uint8_t*)(base + 14);
 			addr_nvnBuilderSetPresentInterval = (uint64_t)&nvnBuilderSetPresentInterval;
 			addr_nvnSetPresentInterval = (uint64_t)&nvnSetPresentInterval;
 			addr_nvnAcquireTexture = (uint64_t)&nvnAcquireTexture;
