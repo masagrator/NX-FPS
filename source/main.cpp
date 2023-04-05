@@ -294,14 +294,14 @@ int eglSwap (void* EGLDisplay, void* EGLSurface) {
 			FPSlock = *FPSlocked_shared;
 		}
 		else if (*FPSlocked_shared <= 30) {
-			eglSwapInterval(EGLDisplay, -2);
+			eglInterval(EGLDisplay, -2);
 			if (*FPSlocked_shared != 30) {
 				FPStiming = (19200000/(*FPSlocked_shared)) - 7800;
 			}
 			else FPStiming = 0;
 		}
 		else {
-			eglSwapInterval(EGLDisplay, -1);
+			eglInterval(EGLDisplay, -1);
 			if (*FPSlocked_shared != 60) {
 				FPStiming = (19200000/(*FPSlocked_shared)) - 7800;
 			}
