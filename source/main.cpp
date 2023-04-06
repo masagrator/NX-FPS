@@ -115,8 +115,12 @@ typedef void* (*nvnSyncWait_0)(void* _this, uint64_t timeout_ns);
 inline void createBuildidPath(uint64_t buildid, char* titleid, char* buffer) {
 	strcpy(buffer, "sdmc:/SaltySD/plugins/FPSLocker/patches/0");
 	strcat(buffer, &titleid[0]);
-	strcat(buffer, "/0");
+	strcat(buffer, "/");
 	ltoa(buildid, &titleid[0], 16);
+	int zero_count = 16 - strlen(&titleid[0]);
+	for (int i = 0; i < zero_count; i++) {
+		strcat(buffer, "0");
+	}
 	strcat(buffer, &titleid[0]);
 	strcat(buffer, ".bin");	
 }
