@@ -96,7 +96,6 @@ typedef uintptr_t (*GetProcAddress)(void* unk1_a, const char * nvnFunction_a);
 uint8_t* FPSlocked_shared = 0;
 uint8_t* FPSmode_shared = 0;
 void* ptr_Framebuffer = 0;
-void* nvnWindow = 0;
 bool* ZeroSync_shared = 0;
 bool* patchApplied_shared = 0;
 uint8_t* API_shared = 0;
@@ -105,18 +104,12 @@ bool changedFPS = false;
 bool FPSmode = 0;
 uintptr_t addr_nvnSetPresentInterval;
 uintptr_t addr_nvnBuilderSetPresentInterval;
-uintptr_t addr_nvnAcquireTexture;
-uintptr_t addr_nvnQAcquireTexture;
 uintptr_t addr_nvnSyncWait;
 uintptr_t ptr_nvnWindowSetPresentInterval;
 uintptr_t ptr_nvnWindowBuilderSetPresentInterval;
-uintptr_t ptr_nvnWindowAcquireTexture;
-uintptr_t ptr_nvnQueueAcquireTexture;
 uintptr_t ptr_nvnSyncWait;
 typedef void (*nvnSetPresentInterval_0)(void* _this, int mode);
 typedef void (*nvnBuilderSetPresentInterval_0)(void* _this, int mode);
-typedef void* (*nvnAcquireTexture_0)(void* _this, void* x1, int w2);
-typedef void* (*nvnQAcquireTexture_0)(void* _this, void* x1, int w2);
 typedef void* (*nvnSyncWait_0)(void* _this, uint64_t timeout_ns);
 
 inline void createBuildidPath(uint64_t buildid, char* titleid, char* buffer) {
@@ -320,13 +313,14 @@ void nvnBuilderSetPresentInterval(void* _this, int mode) {
 	((nvnBuilderSetPresentInterval_0)(ptr_nvnWindowBuilderSetPresentInterval))(_this, mode);
 }
 
-void nvnSetPresentInterval(void* _this, int mode) {
+void nvnSetPresentInterval(void* nvnWindow, int mode) {
 	if (!changeFPS) {
-		((nvnSetPresentInterval_0)(ptr_nvnWindowSetPresentInterval))(_this, mode);
+		((nvnSetPresentInterval_0)(ptr_nvnWindowSetPresentInterval))(nvnWindow, mode);
 		changedFPS = false;
 		*FPSmode_shared = mode;
 	}
-	else if (nvnWindow && !_this) {
+	else if (mode < 0) {
+		mode *= -1;
 		if (*FPSmode_shared != mode) {
 			((nvnSetPresentInterval_0)(ptr_nvnWindowSetPresentInterval))(nvnWindow, mode);
 			*FPSmode_shared = mode;
@@ -341,17 +335,7 @@ void* nvnSyncWait0(void* _this, uint64_t timeout_ns) {
 	return ((nvnSyncWait_0)(ptr_nvnSyncWait))(_this, timeout_ns);
 }
 
-void* nvnAcquireTexture(void* _this, void* x1, int w2) {
-	nvnWindow = _this;
-	return ((nvnAcquireTexture_0)(ptr_nvnWindowAcquireTexture))(_this, x1, w2);
-}
-
-void* nvnQAcquireTexture(void* _this, void* x1, int w2) {
-	nvnWindow = x1;
-	return ((nvnQAcquireTexture_0)(ptr_nvnQueueAcquireTexture))(_this, x1, w2);
-}
-
-void nvnPresentTexture(void* _this, void* unk2, void* unk3) {
+void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	static uint8_t FPS_temp = 0;
 	static uint64_t starttick = 0;
 	static uint64_t endtick = 0;
@@ -369,7 +353,7 @@ void nvnPresentTexture(void* _this, void* unk2, void* unk3) {
 		}
 	}
 	
-	((nvnQueuePresentTexture_0)(ptr_nvnQueuePresentTexture))(_this, unk2, unk3);
+	((nvnQueuePresentTexture_0)(ptr_nvnQueuePresentTexture))(_this, nvnWindow, unk3);
 	endtick = _ZN2nn2os13GetSystemTickEv();
 	framedelta = endtick - frameend;
 	frameavg = ((9*frameavg) + framedelta) / 10;
@@ -392,7 +376,7 @@ void nvnPresentTexture(void* _this, void* unk2, void* unk3) {
 	*FPSavg_shared = FPSavg;
 	*pluginActive = true;
 
-	if (nvnWindow && FPSlock != *FPSlocked_shared) {
+	if (FPSlock != *FPSlocked_shared) {
 		changeFPS = true;
 		changedFPS = false;
 		if (*FPSlocked_shared == 0) {
@@ -401,14 +385,14 @@ void nvnPresentTexture(void* _this, void* unk2, void* unk3) {
 			FPSlock = *FPSlocked_shared;
 		}
 		else if (*FPSlocked_shared <= 30) {
-			nvnSetPresentInterval(nullptr, 2);
+			nvnSetPresentInterval(nvnWindow, -2);
 			if (*FPSlocked_shared != 30) {
 				FPStiming = (19200000/(*FPSlocked_shared)) - 7800;
 			}
 			else FPStiming = 0;
 		}
 		else {
-			nvnSetPresentInterval(nullptr, 1);
+			nvnSetPresentInterval(nvnWindow, -1);
 			if (*FPSlocked_shared != 60) {
 				FPStiming = (19200000/(*FPSlocked_shared)) - 7800;
 			}
@@ -437,14 +421,6 @@ uintptr_t nvnGetProcAddress (void* unk1, const char* nvnFunction) {
 	else if (!strcmp("nvnWindowBuilderSetPresentInterval", nvnFunction)) {
 		ptr_nvnWindowBuilderSetPresentInterval = address;
 		return addr_nvnBuilderSetPresentInterval;
-	}
-	else if (!strcmp("nvnWindowAcquireTexture", nvnFunction)) {
-		ptr_nvnWindowAcquireTexture = address;
-		return addr_nvnAcquireTexture;
-	}
-	else if (!strcmp("nvnQueueAcquireTexture", nvnFunction)) {
-		ptr_nvnQueueAcquireTexture = address;
-		return addr_nvnQAcquireTexture;
 	}
 	else if (!strcmp("nvnSyncWait", nvnFunction)) {
 		ptr_nvnSyncWait = address;
@@ -496,8 +472,6 @@ int main(int argc, char *argv[]) {
 			API_shared = (uint8_t*)(base + 14);
 			addr_nvnBuilderSetPresentInterval = (uint64_t)&nvnBuilderSetPresentInterval;
 			addr_nvnSetPresentInterval = (uint64_t)&nvnSetPresentInterval;
-			addr_nvnAcquireTexture = (uint64_t)&nvnAcquireTexture;
-			addr_nvnQAcquireTexture = (uint64_t)&nvnQAcquireTexture;
 			addr_nvnSyncWait = (uint64_t)&nvnSyncWait0;
 
 			char titleid[17];
