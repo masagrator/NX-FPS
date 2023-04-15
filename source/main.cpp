@@ -357,6 +357,14 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 		FPS = FPS_temp - 1;
 		FPS_temp = 0;
 		*FPS_shared = FPS;
+		uint8_t FPSmode_old = *FPSmode_shared;
+		*FPSmode_shared = ((nvnGetPresentInterval_0)(ptr_nvnWindowGetPresentInterval))(nvnWindow);
+		if (*FPSmode_shared != FPSmode_old && *FPSlocked_shared) {
+			if (*FPSmode_shared == 2) {
+				FPSlock = 30;
+			}
+			else FPSlock = 60;
+		}
 		if (changeFPS && !configRC && FPSlock) {
 			LOCK::applyPatch(configBuffer, configSize, FPSlock);
 			*patchApplied_shared = true;
