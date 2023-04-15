@@ -103,13 +103,12 @@ bool changeFPS = false;
 bool changedFPS = false;
 bool FPSmode = 0;
 uintptr_t addr_nvnSetPresentInterval;
-uintptr_t addr_nvnBuilderSetPresentInterval;
 uintptr_t addr_nvnSyncWait;
 uintptr_t ptr_nvnWindowSetPresentInterval;
-uintptr_t ptr_nvnWindowBuilderSetPresentInterval;
+uintptr_t ptr_nvnWindowGetPresentInterval;
 uintptr_t ptr_nvnSyncWait;
-typedef void (*nvnSetPresentInterval_0)(void* _this, int mode);
-typedef void (*nvnBuilderSetPresentInterval_0)(void* _this, int mode);
+typedef void (*nvnSetPresentInterval_0)(void* nvnWindow, int mode);
+typedef int (*nvnGetPresentInterval_0)(void* nvnWindow);
 typedef void* (*nvnSyncWait_0)(void* _this, uint64_t timeout_ns);
 
 inline void createBuildidPath(uint64_t buildid, char* titleid, char* buffer) {
@@ -301,11 +300,6 @@ int eglSwap (void* EGLDisplay, void* EGLSurface) {
 	return result;
 }
 
-void nvnBuilderSetPresentInterval(void* _this, int mode) {
-	*FPSmode_shared = mode;
-	((nvnBuilderSetPresentInterval_0)(ptr_nvnWindowBuilderSetPresentInterval))(_this, mode);
-}
-
 void nvnSetPresentInterval(void* nvnWindow, int mode) {
 	if (!changeFPS) {
 		((nvnSetPresentInterval_0)(ptr_nvnWindowSetPresentInterval))(nvnWindow, mode);
@@ -339,7 +333,10 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	static uint8_t FPSlock = 0;
 	static uint32_t FPStiming = 0;
 
-	if (!starttick) starttick = _ZN2nn2os13GetSystemTickEv();
+	if (!starttick) {
+		starttick = _ZN2nn2os13GetSystemTickEv();
+		*FPSmode_shared = ((nvnGetPresentInterval_0)(ptr_nvnWindowGetPresentInterval))(nvnWindow);
+	}
 	if (FPStiming && !LOCK::blockDelayFPS) {
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
 			svcSleepThread(100000);
@@ -411,9 +408,9 @@ uintptr_t nvnGetProcAddress (void* unk1, const char* nvnFunction) {
 		ptr_nvnWindowSetPresentInterval = address;
 		return addr_nvnSetPresentInterval;
 	}
-	else if (!strcmp("nvnWindowBuilderSetPresentInterval", nvnFunction)) {
-		ptr_nvnWindowBuilderSetPresentInterval = address;
-		return addr_nvnBuilderSetPresentInterval;
+	else if (!strcmp("nvnWindowGetPresentInterval", nvnFunction)) {
+		ptr_nvnWindowGetPresentInterval = address;
+		return address;
 	}
 	else if (!strcmp("nvnSyncWait", nvnFunction)) {
 		ptr_nvnSyncWait = address;
@@ -463,7 +460,6 @@ int main(int argc, char *argv[]) {
 			ZeroSync_shared = (bool*)(base + 12);
 			patchApplied_shared = (bool*)(base + 13);
 			API_shared = (uint8_t*)(base + 14);
-			addr_nvnBuilderSetPresentInterval = (uint64_t)&nvnBuilderSetPresentInterval;
 			addr_nvnSetPresentInterval = (uint64_t)&nvnSetPresentInterval;
 			addr_nvnSyncWait = (uint64_t)&nvnSyncWait0;
 
