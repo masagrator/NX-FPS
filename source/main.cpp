@@ -169,7 +169,7 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 	}
 	if (FPStiming && !LOCK::blockDelayFPS) {
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
-			svcSleepThread(100000);
+			svcSleepThread(-1);
 		}
 	}
 
@@ -243,7 +243,7 @@ int eglSwap (void* EGLDisplay, void* EGLSurface) {
 	}
 	if (FPStiming && !LOCK::blockDelayFPS) {
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
-			svcSleepThread(100000);
+			svcSleepThread(-1);
 		}
 	}
 	
@@ -339,7 +339,7 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	}
 	if (FPStiming && !LOCK::blockDelayFPS) {
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
-			svcSleepThread(100000);
+			svcSleepThread(-1);
 		}
 	}
 	
@@ -378,7 +378,7 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 		else if (*FPSlocked_shared <= 30) {
 			nvnSetPresentInterval(nvnWindow, -2);
 			if (*FPSlocked_shared != 30) {
-				FPStiming = (19200000/(*FPSlocked_shared)) - 7800;
+				FPStiming = (19200000/(*FPSlocked_shared)) - 6000;
 			}
 			else FPStiming = 0;
 		}
@@ -386,7 +386,7 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 			nvnSetPresentInterval(nvnWindow, -2); //This allows in game with glitched interval to unlock 60 FPS, f.e. WRC Generations
 			nvnSetPresentInterval(nvnWindow, -1);
 			if (*FPSlocked_shared != 60) {
-				FPStiming = (19200000/(*FPSlocked_shared)) - 7800;
+				FPStiming = (19200000/(*FPSlocked_shared)) - 6000;
 			}
 			else FPStiming = 0;
 		}
