@@ -4,6 +4,7 @@
 #include "saltysd/SaltySD_core.h"
 #include "ltoa.h"
 #include <cstdlib>
+#include <cmath>
 #include "lock.hpp"
 
 extern "C" {
@@ -135,21 +136,15 @@ inline uint64_t getMainAddress() {
 	u32 pageinfo = 0;
 
 	uint64_t base_address = SaltySDCore_getCodeStart() + 0x4000;
-	Result rc = svcQueryMemory(&memoryinfo, &pageinfo, base_address);
-	if (R_FAILED(rc)) return 0;
-	if ((memoryinfo.addr == base_address) && (memoryinfo.perm & Perm_X))
-		return base_address;
-	base_address = memoryinfo.addr+memoryinfo.size;
-	rc = svcQueryMemory(&memoryinfo, &pageinfo, base_address);
-	if (R_FAILED(rc)) return 0;
-	if ((memoryinfo.addr == base_address) && (memoryinfo.perm & Perm_X))
-		return base_address;
-	base_address = memoryinfo.addr+memoryinfo.size;
-	rc = svcQueryMemory(&memoryinfo, &pageinfo, base_address);
-	if (R_FAILED(rc)) return 0;
-	if ((memoryinfo.addr == base_address) && (memoryinfo.perm & Perm_X))
-		return base_address;
-	else return 0;
+	for (size_t i = 0; i < 3; i++) {
+		Result rc = svcQueryMemory(&memoryinfo, &pageinfo, base_address);
+		if (R_FAILED(rc)) return 0;
+		if ((memoryinfo.addr == base_address) && (memoryinfo.perm & Perm_X))
+			return base_address;
+		base_address = memoryinfo.addr+memoryinfo.size;
+	}
+
+	return 0;
 }
 
 uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
@@ -162,12 +157,18 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 	static uint64_t frameavg = 0;
 	static uint8_t FPSlock = 0;
 	static uint32_t FPStiming = 0;
+	static uint8_t range = 0;
+	
+	bool FPSlock_delayed = false;
 	
 	if (!starttick) {
 		*API_shared = 3;
 		starttick = _ZN2nn2os13GetSystemTickEv();
 	}
 	if (FPStiming && !LOCK::blockDelayFPS) {
+		if ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
+			FPSlock_delayed = true;
+		}
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
 			svcSleepThread(-1);
 		}
@@ -178,6 +179,22 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 	framedelta = endtick - frameend;
 	frameavg = ((9*frameavg) + framedelta) / 10;
 	FPSavg = systemtickfrequency / (float)frameavg;
+
+	if (FPSlock_delayed && FPStiming) {
+		if (FPSavg > ((float)FPSlock)) {
+			if (range < 200) {
+				FPStiming += 20;
+				range++;
+			}
+		}
+		else if ((std::lround(FPSavg) == FPSlock) && (FPSavg < (float)FPSlock)) {
+			if (range > 0) {
+				FPStiming -= 20;
+				range--;
+			}
+		}
+	}
+
 	frameend = endtick;
 	
 	FPS_temp++;
@@ -198,7 +215,7 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 
 	if (FPSlock != *FPSlocked_shared) {
 		if ((*FPSlocked_shared < 60) && (*FPSlocked_shared > 0)) {
-			FPStiming = (19200000/(*FPSlocked_shared)) - 7800;
+			FPStiming = (19200000/(*FPSlocked_shared)) - 6000;
 		}
 		else FPStiming = 0;
 		FPSlock = *FPSlocked_shared;
@@ -235,23 +252,44 @@ int eglSwap (void* EGLDisplay, void* EGLSurface) {
 	static uint64_t frameavg = 0;
 	static uint8_t FPSlock = 0;
 	static uint32_t FPStiming = 0;
-	int result = 0;
+	static uint8_t range = 0;
+	
+	bool FPSlock_delayed = false;
 
 	if (!starttick) {
 		*API_shared = 2;
 		starttick = _ZN2nn2os13GetSystemTickEv();
 	}
 	if (FPStiming && !LOCK::blockDelayFPS) {
+		if ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
+			FPSlock_delayed = true;
+		}
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
 			svcSleepThread(-1);
 		}
 	}
 	
-	result = eglSwapBuffers(EGLDisplay, EGLSurface);
+	int result = eglSwapBuffers(EGLDisplay, EGLSurface);
 	endtick = _ZN2nn2os13GetSystemTickEv();
 	framedelta = endtick - frameend;
 	frameavg = ((9*frameavg) + framedelta) / 10;
 	FPSavg = systemtickfrequency / (float)frameavg;
+
+	if (FPSlock_delayed && FPStiming) {
+		if (FPSavg > ((float)FPSlock)) {
+			if (range < 200) {
+				FPStiming += 20;
+				range++;
+			}
+		}
+		else if ((std::lround(FPSavg) == FPSlock) && (FPSavg < (float)FPSlock)) {
+			if (range > 0) {
+				FPStiming -= 20;
+				range--;
+			}
+		}
+	}
+
 	frameend = endtick;
 	
 	FPS_temp++;
@@ -281,14 +319,14 @@ int eglSwap (void* EGLDisplay, void* EGLSurface) {
 		else if (*FPSlocked_shared <= 30) {
 			eglInterval(EGLDisplay, -2);
 			if (*FPSlocked_shared != 30) {
-				FPStiming = (19200000/(*FPSlocked_shared)) - 7800;
+				FPStiming = (19200000/(*FPSlocked_shared)) - 6000;
 			}
 			else FPStiming = 0;
 		}
 		else {
 			eglInterval(EGLDisplay, -1);
 			if (*FPSlocked_shared != 60) {
-				FPStiming = (19200000/(*FPSlocked_shared)) - 7800;
+				FPStiming = (19200000/(*FPSlocked_shared)) - 6000;
 			}
 			else FPStiming = 0;
 		}
@@ -332,12 +370,18 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	static uint64_t frameavg = 0;
 	static uint8_t FPSlock = 0;
 	static uint32_t FPStiming = 0;
+	static uint8_t range = 0;
+	
+	bool FPSlock_delayed = false;
 
 	if (!starttick) {
 		starttick = _ZN2nn2os13GetSystemTickEv();
 		*FPSmode_shared = (uint8_t)((nvnGetPresentInterval_0)(ptr_nvnWindowGetPresentInterval))(nvnWindow);
 	}
 	if (FPStiming && !LOCK::blockDelayFPS) {
+		if ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
+			FPSlock_delayed = true;
+		}
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
 			svcSleepThread(-1);
 		}
@@ -346,10 +390,26 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	((nvnQueuePresentTexture_0)(ptr_nvnQueuePresentTexture))(_this, nvnWindow, unk3);
 	endtick = _ZN2nn2os13GetSystemTickEv();
 	framedelta = endtick - frameend;
+	
 	frameavg = ((9*frameavg) + framedelta) / 10;
 	FPSavg = systemtickfrequency / (float)frameavg;
+
+	if (FPSlock_delayed && FPStiming) {
+		if (FPSavg > ((float)FPSlock)) {
+			if (range < 200) {
+				FPStiming += 20;
+				range++;
+			}
+		}
+		else if ((std::lround(FPSavg) == FPSlock) && (FPSavg < (float)FPSlock)) {
+			if (range > 0) {
+				FPStiming -= 20;
+				range--;
+			}
+		}
+	}
+
 	frameend = endtick;
-	
 	FPS_temp++;
 	deltatick = endtick - starttick;
 	if (deltatick >= 19200000) {
