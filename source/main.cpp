@@ -90,6 +90,7 @@ struct {
 	bool* ZeroSync = 0;
 	bool* patchApplied = 0;
 	uint8_t* API = 0;
+	uint32_t* FPSticks = 0;
 } Shared;
 
 struct {
@@ -113,7 +114,6 @@ struct {
 	uint8_t FPS = 0xFF;
 	float FPSavg = 255;
 	bool FPSmode = 0;
-	uint32_t FPSticks[10] = {0};
 } Stats;
 
 static uint32_t systemtickfrequency = 19200000;
@@ -171,6 +171,7 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 	static uint64_t frameavg = 0;
 	static uint8_t FPSlock = 0;
 	static uint32_t FPStiming = 0;
+	static uint8_t FPStickItr = 0;
 	static uint8_t range = 0;
 	
 	bool FPSlock_delayed = false;
@@ -213,6 +214,13 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 	
 	FPS_temp++;
 	deltatick = endtick - starttick;
+
+	Shared.FPSticks[FPStickItr] = framedelta;
+	if (FPStickItr+1 == 10) {
+		FPStickItr = 0;
+	}
+	else FPStickItr++;
+
 	if (deltatick > systemtickfrequency) {
 		starttick = _ZN2nn2os13GetSystemTickEv();
 		Stats.FPS = FPS_temp - 1;
@@ -229,7 +237,7 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 
 	if (FPSlock != *(Shared.FPSlocked)) {
 		if ((*(Shared.FPSlocked) < 60) && (*(Shared.FPSlocked) > 0)) {
-			FPStiming = (19200000/(*(Shared.FPSlocked))) - 6000;
+			FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
 		}
 		else FPStiming = 0;
 		FPSlock = *(Shared.FPSlocked);
@@ -266,6 +274,7 @@ int eglSwap (void* EGLDisplay, void* EGLSurface) {
 	static uint64_t frameavg = 0;
 	static uint8_t FPSlock = 0;
 	static uint32_t FPStiming = 0;
+	static uint8_t FPStickItr = 0;
 	static uint8_t range = 0;
 	
 	bool FPSlock_delayed = false;
@@ -308,6 +317,13 @@ int eglSwap (void* EGLDisplay, void* EGLSurface) {
 	
 	FPS_temp++;
 	deltatick = endtick - starttick;
+
+	Shared.FPSticks[FPStickItr] = framedelta;
+	if (FPStickItr+1 == 10) {
+		FPStickItr = 0;
+	}
+	else FPStickItr++;
+
 	if (deltatick > systemtickfrequency) {
 		starttick = _ZN2nn2os13GetSystemTickEv();
 		Stats.FPS = FPS_temp - 1;
@@ -333,14 +349,14 @@ int eglSwap (void* EGLDisplay, void* EGLSurface) {
 		else if (*(Shared.FPSlocked) <= 30) {
 			eglInterval(EGLDisplay, -2);
 			if (*(Shared.FPSlocked) != 30) {
-				FPStiming = (19200000/(*(Shared.FPSlocked))) - 6000;
+				FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
 			}
 			else FPStiming = 0;
 		}
 		else {
 			eglInterval(EGLDisplay, -1);
 			if (*(Shared.FPSlocked) != 60) {
-				FPStiming = (19200000/(*(Shared.FPSlocked))) - 6000;
+				FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
 			}
 			else FPStiming = 0;
 		}
@@ -384,6 +400,7 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	static uint64_t frameavg = 0;
 	static uint8_t FPSlock = 0;
 	static uint32_t FPStiming = 0;
+	static uint8_t FPStickItr = 0;
 	static uint8_t range = 0;
 	
 	bool FPSlock_delayed = false;
@@ -404,6 +421,12 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	((nvnQueuePresentTexture_0)(Ptrs.nvnQueuePresentTexture))(_this, nvnWindow, unk3);
 	endtick = _ZN2nn2os13GetSystemTickEv();
 	framedelta = endtick - frameend;
+
+	Shared.FPSticks[FPStickItr] = framedelta;
+	if (FPStickItr+1 == 10) {
+		FPStickItr = 0;
+	}
+	else FPStickItr++;
 	
 	frameavg = ((9*frameavg) + framedelta) / 10;
 	Stats.FPSavg = systemtickfrequency / (float)frameavg;
@@ -452,7 +475,7 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 		else if (*(Shared.FPSlocked) <= 30) {
 			nvnSetPresentInterval(nvnWindow, -2);
 			if (*(Shared.FPSlocked) != 30) {
-				FPStiming = (19200000/(*(Shared.FPSlocked))) - 6000;
+				FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
 			}
 			else FPStiming = 0;
 		}
@@ -460,7 +483,7 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 			nvnSetPresentInterval(nvnWindow, -2); //This allows in game with glitched interval to unlock 60 FPS, f.e. WRC Generations
 			nvnSetPresentInterval(nvnWindow, -1);
 			if (*(Shared.FPSlocked) != 60) {
-				FPStiming = (19200000/(*(Shared.FPSlocked))) - 6000;
+				FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
 			}
 			else FPStiming = 0;
 		}
@@ -509,7 +532,7 @@ int main(int argc, char *argv[]) {
 	SaltySDCore_printf("NX-FPS: alive\n");
 	LOCK::mappings.main_start = getMainAddress();
 	SaltySDCore_printf("NX-FPS: found main at: 0x%lX\n", LOCK::mappings.main_start);
-	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 15);
+	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 55);
 	SaltySDCore_printf("NX-FPS: ret: 0x%X\n", ret);
 	if (!ret) {
 		SaltySDCore_printf("NX-FPS: MemoryOffset: %d\n", SharedMemoryOffset);
@@ -536,6 +559,7 @@ int main(int argc, char *argv[]) {
 			Shared.ZeroSync = (bool*)(base + 12);
 			Shared.patchApplied = (bool*)(base + 13);
 			Shared.API = (uint8_t*)(base + 14);
+			Shared.FPSticks = (uint32_t*)(base + 15);
 			Address.nvnWindowSetPresentInterval = (uint64_t)&nvnSetPresentInterval;
 			Address.nvnSyncWait = (uint64_t)&nvnSyncWait0;
 
