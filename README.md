@@ -124,6 +124,7 @@ Not working games with this plugin (You can find games not compatible with Salty
 | ------------- | ------------- | ------------- |
 | Final Fantasy VIII Remastered | all | Framework stuff is included in NROs which SaltyNX doesn't support |
 | Final Fantasy X/X-2 | all | Framework stuff is included in NROs which SaltyNX doesn't support |
+| LEGO Harry Potter Collection | all | Framework stuff is included in NROs which SaltyNX doesn't support |
 
 # Troubleshooting
 Q: Why I got constantly 255?
