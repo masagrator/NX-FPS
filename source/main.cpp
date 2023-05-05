@@ -91,6 +91,7 @@ struct {
 	bool* patchApplied = 0;
 	uint8_t* API = 0;
 	uint32_t* FPSticks = 0;
+	uint8_t* Buffers = 0;
 } Shared;
 
 struct {
@@ -99,6 +100,7 @@ struct {
 
 	uintptr_t nvnWindowSetPresentInterval;
 	uintptr_t nvnWindowGetPresentInterval;
+	uintptr_t nvnWindowBuilderSetTextures;
 	uintptr_t nvnSyncWait;
 } Ptrs;
 
@@ -106,6 +108,7 @@ struct {
 	uintptr_t nvnWindowGetProcAddress;
 	uintptr_t nvnQueuePresentTexture;
 	uintptr_t nvnWindowSetPresentInterval;
+	uintptr_t nvnWindowBuilderSetTextures;
 	uintptr_t nvnSyncWait;
 	uintptr_t nvnGetProcAddress;
 } Address;
@@ -122,6 +125,7 @@ typedef uintptr_t (*GetProcAddress)(void* unk1_a, const char * nvnFunction_a);
 
 bool changeFPS = false;
 bool changedFPS = false;
+typedef void (*nvnBuilderSetTextures_0)(void* nvnWindowBuilder, int buffers, void* texturesBuffer);
 typedef void (*nvnSetPresentInterval_0)(void* nvnWindow, int mode);
 typedef int (*nvnGetPresentInterval_0)(void* nvnWindow);
 typedef void* (*nvnSyncWait_0)(void* _this, uint64_t timeout_ns);
@@ -368,6 +372,11 @@ int eglSwap (void* EGLDisplay, void* EGLSurface) {
 	return result;
 }
 
+void nvnWindowBuilderSetTextures(void* nvnWindowBuilder, int numBufferedFrames, void* nvnTextures) {
+	*(Shared.Buffers) = numBufferedFrames;
+	return ((nvnBuilderSetTextures_0)(Ptrs.nvnWindowBuilderSetTextures))(nvnWindowBuilder, numBufferedFrames, nvnTextures);
+}
+
 void nvnSetPresentInterval(void* nvnWindow, int mode) {
 	if (!changeFPS) {
 		((nvnSetPresentInterval_0)(Ptrs.nvnWindowSetPresentInterval))(nvnWindow, mode);
@@ -511,6 +520,10 @@ uintptr_t nvnGetProcAddress (void* unk1, const char* nvnFunction) {
 		Ptrs.nvnWindowGetPresentInterval = address;
 		return address;
 	}
+	else if (!strcmp("nvnWindowBuilderSetTextures", nvnFunction)) {
+		Ptrs.nvnWindowBuilderSetTextures = address;
+		return Address.nvnWindowBuilderSetTextures;
+	}
 	else if (!strcmp("nvnSyncWait", nvnFunction)) {
 		Ptrs.nvnSyncWait = address;
 		return Address.nvnSyncWait;
@@ -532,7 +545,7 @@ int main(int argc, char *argv[]) {
 	SaltySDCore_printf("NX-FPS: alive\n");
 	LOCK::mappings.main_start = getMainAddress();
 	SaltySDCore_printf("NX-FPS: found main at: 0x%lX\n", LOCK::mappings.main_start);
-	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 55);
+	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 56);
 	SaltySDCore_printf("NX-FPS: ret: 0x%X\n", ret);
 	if (!ret) {
 		SaltySDCore_printf("NX-FPS: MemoryOffset: %d\n", SharedMemoryOffset);
@@ -560,8 +573,10 @@ int main(int argc, char *argv[]) {
 			Shared.patchApplied = (bool*)(base + 13);
 			Shared.API = (uint8_t*)(base + 14);
 			Shared.FPSticks = (uint32_t*)(base + 15);
+			Shared.Buffers = (uint8_t*)(base + 55);
 			Address.nvnWindowSetPresentInterval = (uint64_t)&nvnSetPresentInterval;
 			Address.nvnSyncWait = (uint64_t)&nvnSyncWait0;
+			Address.nvnWindowBuilderSetTextures = (uint64_t)&nvnWindowBuilderSetTextures;
 
 			char titleid[17];
 			CheckTitleID(&titleid[0]);
