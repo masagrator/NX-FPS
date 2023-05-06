@@ -3,6 +3,7 @@ import sys
 import os
 import struct
 from pathlib import Path
+import capstone
 
 compares = [">", ">=", "<", "<=", "==", "!="]
 
@@ -79,9 +80,9 @@ def GetValue(file, type: str):
 				case "int64":
 					entry.append(int.from_bytes(file.read(8), "little", signed=True))
 				case "float":
-					entry.append(struct.unpack("<f", file.read(4)))
+					entry.append(struct.unpack("<f", file.read(4))[0])
 				case "double":
-					entry.append(struct.unpack("<d", file.read(8)))
+					entry.append(struct.unpack("<d", file.read(8))[0])
 		return entry
 
 def GetValueType(file) -> str:
@@ -196,6 +197,37 @@ def processData(file, size):
 				print("WRONG OPCODE %d at offset 0x%x" % (OPCODE, file.tell()-1))
 				sys.exit()
 
+def GetInstructions(file, count: int) -> list:
+	cs = capstone.Cs(capstone.CS_ARCH_ARM64, capstone.CS_MODE_LITTLE_ENDIAN)
+	entry = []
+	for i in cs.disasm(file.read(count*4), 0):
+		entry.append("%s %s" % (i.mnemonic, i.op_str))
+	return entry
+
+def processMasterData(file, size):
+	ret_list = []
+	while(file.tell() < size):
+		entry = {}
+		OPCODE = int.from_bytes(file.read(1), "little", signed=True)
+		match(OPCODE):
+			case 1:
+				entry["type"] = "bytes"
+				entry["main_offset"] = int.from_bytes(file.read(4), "little", signed=True)
+				entry["value_type"] = GetValueType(file)
+				entry["value"] = GetValue(file, entry["value_type"])
+				ret_list.append(entry)
+			case 4:
+				entry["type"] = "assembly"
+				entry["main_offset"] = int.from_bytes(file.read(4), "little", signed=True)
+				instructions_count = int.from_bytes(file.read(1), "little")
+				entry["instructions"] = GetInstructions(file, instructions_count)
+				ret_list.append(entry)
+			case -1:
+				return ret_list
+			case _:
+				print("WRONG OPCODE %d at offset 0x%x" % (OPCODE, file.tell()-1))
+				sys.exit()
+
 filesize = os.stat(sys.argv[1]).st_size
 file = open(sys.argv[1], "rb")
 
@@ -204,18 +236,27 @@ if (file.read(4) != b"LOCK"):
 	sys.exit()
 
 gen = int.from_bytes(file.read(3), "little")
-if (gen != 1):
+if (gen > 2 or gen < 1):
 	print("Wrong version!")
 	sys.exit()
 
 unsafeCheck = bool.from_bytes(file.read(1), "little")
 
+
+entries = 10
+if (gen == 2):
+	entries += 1
+
 OFFSETS = []
 
-for i in range(10):
+for i in range(entries):
 	OFFSETS.append(int.from_bytes(file.read(4), "little"))
 
-if OFFSETS[0] != 48:
+first_offset = 0x30
+if (gen == 2):
+	first_offset += 4
+
+if OFFSETS[0] != first_offset:
 	print("Offset check failed!")
 	sys.exit()
 
@@ -224,13 +265,18 @@ OBJECTS = ["15FPS", "20FPS", "25FPS", "30FPS", "35FPS", "40FPS", "45FPS", "50FPS
 
 DICT["unsafeCheck"] = unsafeCheck
 
-for i in range(len(OFFSETS)):
+if (gen == 2):
+	file.seek(OFFSETS[10])
+	DICT["MASTER_WRITE"] = processMasterData(file, filesize)
+
+entries -= 1
+for i in range(entries):
 	file.seek(OFFSETS[i])
 	DICT[OBJECTS[i]] = processData(file, filesize)
 
 file.close()
 
 new_file = open(f"_{Path(sys.argv[1]).stem}.yaml", "w", encoding="ascii")
-yaml = ruamel.yaml.YAML(typ="safe")
+yaml = ruamel.yaml.YAML()
 yaml.dump(DICT, new_file)
 new_file.close()
