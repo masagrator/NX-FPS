@@ -209,16 +209,6 @@ namespace LOCK {
 						return 0x313;
 				}				
 			}
-			else if (OPCODE == 4) {
-				uint32_t main_offset = 0;
-				SaltySDCore_fread(&main_offset, 4, 1, file);
-				uint8_t elements = 0;
-				SaltySDCore_fread(&elements, 1, 1, file);
-				void* temp_buffer = calloc(elements, 4);
-				SaltySDCore_fread(temp_buffer, 4, elements, file);
-				SaltySD_Memcpy(LOCK::mappings.main_start + main_offset, (u64)temp_buffer, elements*4);
-				free(temp_buffer);
-			}
 			else if (OPCODE == -1) {
 				MasterWriteApplied = true;
 				return 0;
