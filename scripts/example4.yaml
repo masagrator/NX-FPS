@@ -12,7 +12,11 @@ MASTER_WRITE:
   - 
     type: assembly
     main_offset: 0x12120304
-    instructions: ["MOV W1, #0", "ADD X1, X2, X3"]
+    relative_offset: true
+    instructions: 
+      - "MOV W1, #0"
+      - "B #0x1212030C"
+      - "ADD X1, X2, X3"
 15FPS:
   # r.DynamicRes.FrameTimeBudget (1000/FPS) rounded to 1 decimal
   -
