@@ -2,7 +2,6 @@ import ruamel.yaml
 import sys
 from pathlib import Path
 import struct
-import keystone
 
 compares = [">", ">=", "<", "<=", "==", "!="]
 
@@ -114,19 +113,6 @@ def returnValue(value_type: str, value) -> bytes:
 			sys.exit()
 	return b"".join(entry)
 
-def returnAssembly(entry_list, relative_offset: int) -> bytes:
-	ks = keystone.Ks(keystone.KS_ARCH_ARM64, keystone.KS_MODE_LITTLE_ENDIAN)
-	entry = []
-	if isinstance(entry_list, list) == True:
-		loops = len(entry_list)
-	else: 
-		loops = 1
-		entry_list = [entry_list]
-	entry.append(loops.to_bytes(1, "little"))
-	encoding, count = ks.asm(";".join(entry_list), relative_offset, True)
-	entry.append(encoding)
-	return b"".join(entry)
-
 
 file = open(sys.argv[1], "r", encoding="ascii")
 DICT = ruamel.yaml.safe_load(file.read())
@@ -149,17 +135,9 @@ if "MASTER_WRITE" in DICT.keys():
 				entry.append(b"\x01")
 				entry.append(DICT["MASTER_WRITE"][x]["main_offset"].to_bytes(4, "little", signed=True))
 				entry.append(returnValue(DICT["MASTER_WRITE"][x]["value_type"], DICT["MASTER_WRITE"][x]["value"]))
-			case "assembly":
-				entry.append(b"\x04")
-				if (DICT["MASTER_WRITE"][x]["main_offset"] % 4 != 0):
-					print("Assembly main_offset must be divisible by 4!")
-					print("Wrong offset: 0x%x" % DICT["MASTER_WRITE"][x]["main_offset"])
-					sys.exit()
-				entry.append(DICT["MASTER_WRITE"][x]["main_offset"].to_bytes(4, "little", signed=True))
-				offset = 0
-				if (DICT["MASTER_WRITE"][x]["relative_offset"] == True):
-					offset = DICT["MASTER_WRITE"][x]["main_offset"]
-				entry.append(returnAssembly(DICT["MASTER_WRITE"][x]["instructions"], offset))
+			case _:
+				print("WRONG TYPE: %s" % DICT["MASTER_WRITE"][x]["type"])
+				sys.exit()
 	entry.append(b"\xFF")
 	MASTER_WRITE_TEMP = b"".join(entry)
 

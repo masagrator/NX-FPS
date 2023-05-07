@@ -3,7 +3,6 @@ import sys
 import os
 import struct
 from pathlib import Path
-import capstone
 
 compares = [">", ">=", "<", "<=", "==", "!="]
 
@@ -197,13 +196,6 @@ def processData(file, size):
 				print("WRONG OPCODE %d at offset 0x%x" % (OPCODE, file.tell()-1))
 				sys.exit()
 
-def GetInstructions(file, count: int, offset: int) -> list:
-	cs = capstone.Cs(capstone.CS_ARCH_ARM64, capstone.CS_MODE_LITTLE_ENDIAN)
-	entry = []
-	for i in cs.disasm(file.read(count*4), offset):
-		entry.append("%s %s" % (i.mnemonic, i.op_str))
-	return entry
-
 def processMasterData(file, size):
 	ret_list = []
 	while(file.tell() < size):
@@ -215,13 +207,6 @@ def processMasterData(file, size):
 				entry["main_offset"] = int.from_bytes(file.read(4), "little", signed=True)
 				entry["value_type"] = GetValueType(file)
 				entry["value"] = GetValue(file, entry["value_type"])
-				ret_list.append(entry)
-			case 4:
-				entry["type"] = "assembly"
-				entry["main_offset"] = int.from_bytes(file.read(4), "little", signed=True)
-				instructions_count = int.from_bytes(file.read(1), "little")
-				entry["relative_offset"] = True
-				entry["instructions"] = GetInstructions(file, instructions_count, entry["main_offset"])
 				ret_list.append(entry)
 			case -1:
 				return ret_list
