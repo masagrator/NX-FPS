@@ -61,9 +61,6 @@ Result readConfig(const char* path, uint8_t** output_buffer) {
 	SaltySDCore_fseek(patch_file, 0, 0);
 	SaltySDCore_fread(buffer, configSize, 1, patch_file);
 	SaltySDCore_fclose(patch_file);
-	FILE* test = SaltySDCore_fopen("sdmc:/debug.dat", "wb");
-	SaltySDCore_fwrite(buffer, configSize, 1, test);
-	SaltySDCore_fclose(test);
 	*output_buffer = buffer;
 	return 0;
 }
