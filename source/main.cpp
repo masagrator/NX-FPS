@@ -55,12 +55,15 @@ Result readConfig(const char* path, uint8_t** output_buffer) {
 			return ret;
 		}
 		configSize = *(uint32_t*)(&(buffer[0x30]));
-		free(buffer);
-		buffer = (uint8_t*)calloc(1, configSize);
-		SaltySDCore_fseek(patch_file, 0, 0);
-		SaltySDCore_fread(buffer, configSize, 1, patch_file);
-		SaltySDCore_fclose(patch_file);
 	}
+	free(buffer);
+	buffer = (uint8_t*)calloc(1, configSize);
+	SaltySDCore_fseek(patch_file, 0, 0);
+	SaltySDCore_fread(buffer, configSize, 1, patch_file);
+	SaltySDCore_fclose(patch_file);
+	FILE* test = SaltySDCore_fopen("sdmc:/debug.dat", "wb");
+	SaltySDCore_fwrite(buffer, configSize, 1, test);
+	SaltySDCore_fclose(test);
 	*output_buffer = buffer;
 	return 0;
 }
