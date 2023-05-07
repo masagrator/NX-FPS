@@ -40,15 +40,30 @@ Result readConfig(const char* path, uint8_t** output_buffer) {
 	FILE* patch_file = SaltySDCore_fopen(path, "rb");
 	SaltySDCore_fseek(patch_file, 0, 2);
 	configSize = SaltySDCore_ftell(patch_file);
-	SaltySDCore_fclose(patch_file);
-	uint8_t* buffer = (uint8_t*)calloc(1, configSize);
-	patch_file = SaltySDCore_fopen(path, "r");
-	SaltySDCore_fread(buffer, configSize, 1, patch_file);
-	SaltySDCore_fclose(patch_file);
-	if (!LOCK::isValid(buffer, configSize)) {
+	SaltySDCore_fseek(patch_file, 0, 0);
+	uint8_t* buffer = (uint8_t*)calloc(1, 0x34);
+	SaltySDCore_fread(buffer, 0x34, 1, patch_file);
+	if (SaltySDCore_ftell(patch_file) != 0x34 || !LOCK::isValid(buffer, 0x34)) {
+		SaltySDCore_fclose(patch_file);
 		free(buffer);
 		return 1;
 	}
+	if (LOCK::gen == 2) {
+		Result ret = LOCK::applyMasterWrite(patch_file, configSize);
+		if (R_FAILED(ret))  {
+			SaltySDCore_fclose(patch_file);
+			return ret;
+		}
+		configSize = *(uint32_t*)(&(buffer[0x30]));
+	}
+	free(buffer);
+	buffer = (uint8_t*)calloc(1, configSize);
+	SaltySDCore_fseek(patch_file, 0, 0);
+	SaltySDCore_fread(buffer, configSize, 1, patch_file);
+	SaltySDCore_fclose(patch_file);
+	FILE* test = SaltySDCore_fopen("sdmc:/debug.dat", "wb");
+	SaltySDCore_fwrite(buffer, configSize, 1, test);
+	SaltySDCore_fclose(test);
 	*output_buffer = buffer;
 	return 0;
 }
@@ -88,7 +103,7 @@ struct {
 	uint8_t* FPSlocked = 0;
 	uint8_t* FPSmode = 0;
 	bool* ZeroSync = 0;
-	bool* patchApplied = 0;
+	uint8_t* patchApplied = 0;
 	uint8_t* API = 0;
 	uint32_t* FPSticks = 0;
 	uint8_t* Buffers = 0;
@@ -232,7 +247,7 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 		*(Shared.FPS) = Stats.FPS;
 		if (changeFPS && !configRC && FPSlock) {
 			LOCK::applyPatch(configBuffer, configSize, FPSlock);
-			*(Shared.patchApplied) = true;
+			*(Shared.patchApplied) = 1;
 		}
 	}
 
@@ -335,7 +350,7 @@ int eglSwap (void* EGLDisplay, void* EGLSurface) {
 		*(Shared.FPS) = Stats.FPS;
 		if (changeFPS && !configRC && FPSlock) {
 			LOCK::applyPatch(configBuffer, configSize, FPSlock);
-			*(Shared.patchApplied) = true;
+			*(Shared.patchApplied) = 1;
 		}
 	}
 	
@@ -466,7 +481,7 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 		*(Shared.FPSmode) = (uint8_t)((nvnGetPresentInterval_0)(Ptrs.nvnWindowGetPresentInterval))(nvnWindow);
 		if (changeFPS && !configRC && FPSlock) {
 			LOCK::applyPatch(configBuffer, configSize, FPSlock);
-			*(Shared.patchApplied) = true;
+			*(Shared.patchApplied) = 1;
 		}
 	}
 
@@ -570,7 +585,7 @@ int main(int argc, char *argv[]) {
 			Shared.FPSlocked = (uint8_t*)(base + 10);
 			Shared.FPSmode = (uint8_t*)(base + 11);
 			Shared.ZeroSync = (bool*)(base + 12);
-			Shared.patchApplied = (bool*)(base + 13);
+			Shared.patchApplied = (uint8_t*)(base + 13);
 			Shared.API = (uint8_t*)(base + 14);
 			Shared.FPSticks = (uint32_t*)(base + 15);
 			Shared.Buffers = (uint8_t*)(base + 55);
@@ -606,6 +621,9 @@ int main(int argc, char *argv[]) {
 					SaltySDCore_fclose(patch_file);
 					SaltySDCore_printf("NX-FPS: FPSLocker: successfully opened: %s\n", path);
 					configRC = readConfig(path, &configBuffer);
+					if (LOCK::MasterWriteApplied) {
+						*(Shared.patchApplied) = 2;
+					}
 					SaltySDCore_printf("NX-FPS: FPSLocker: readConfig rc: %d\n", configRC);
 					svcGetInfo(&LOCK::mappings.alias_start, InfoType_AliasRegionAddress, CUR_PROCESS_HANDLE, 0);
 					svcGetInfo(&LOCK::mappings.heap_start, InfoType_HeapRegionAddress, CUR_PROCESS_HANDLE, 0);
