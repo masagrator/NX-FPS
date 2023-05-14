@@ -490,6 +490,10 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	*(Shared.FPSavg) = Stats.FPSavg;
 	*(Shared.pluginActive) = true;
 
+	if (!*(Shared.ZeroSync) && (FPSlock == 30 || FPSlock == 60) && FPStiming)
+		FPStiming = 0;
+	}
+
 	if (FPSlock != *(Shared.FPSlocked)) {
 		changeFPS = true;
 		changedFPS = false;
