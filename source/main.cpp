@@ -113,6 +113,7 @@ struct {
 	uintptr_t nvnWindowSetPresentInterval;
 	uintptr_t nvnWindowGetPresentInterval;
 	uintptr_t nvnWindowBuilderSetTextures;
+	uintptr_t nvnWindowAcquireTexture;
 	uintptr_t nvnSyncWait;
 } Ptrs;
 
@@ -121,6 +122,7 @@ struct {
 	uintptr_t nvnQueuePresentTexture;
 	uintptr_t nvnWindowSetPresentInterval;
 	uintptr_t nvnWindowBuilderSetTextures;
+	uintptr_t nvnWindowAcquireTexture;
 	uintptr_t nvnSyncWait;
 	uintptr_t nvnGetProcAddress;
 } Address;
@@ -138,9 +140,11 @@ typedef uintptr_t (*GetProcAddress)(void* unk1_a, const char * nvnFunction_a);
 bool changeFPS = false;
 bool changedFPS = false;
 typedef void (*nvnBuilderSetTextures_0)(void* nvnWindowBuilder, int buffers, void* texturesBuffer);
+typedef void* (*nvnWindowAcquireTexture_0)(void* nvnWindow, void* nvnSync, void* index);
 typedef void (*nvnSetPresentInterval_0)(void* nvnWindow, int mode);
 typedef int (*nvnGetPresentInterval_0)(void* nvnWindow);
 typedef void* (*nvnSyncWait_0)(void* _this, uint64_t timeout_ns);
+void* WindowSync = 0;
 
 inline void createBuildidPath(uint64_t buildid, char* titleid, char* buffer) {
 	strcpy(buffer, "sdmc:/SaltySD/plugins/FPSLocker/patches/0");
@@ -407,7 +411,8 @@ void nvnSetPresentInterval(void* nvnWindow, int mode) {
 }
 
 void* nvnSyncWait0(void* _this, uint64_t timeout_ns) {
-	if (*(Shared.ZeroSync)) timeout_ns = 0;
+	if ((_this == WindowSync) && *(Shared.ZeroSync))
+		timeout_ns = 0;
 	return ((nvnSyncWait_0)(Ptrs.nvnSyncWait))(_this, timeout_ns);
 }
 
@@ -516,6 +521,14 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	return;
 }
 
+void* nvnAcquireTexture(void* nvnWindow, void* nvnSync, void* index) {
+	if (WindowSync != nvnSync) {
+		WindowSync = nvnSync;
+	}
+	void* ret = ((nvnWindowAcquireTexture_0)(Ptrs.nvnWindowAcquireTexture))(nvnWindow, nvnSync, index);
+	return ret;
+}
+
 uintptr_t nvnGetProcAddress (void* unk1, const char* nvnFunction) {
 	uintptr_t address = ((GetProcAddress)(Ptrs.nvnDeviceGetProcAddress))(unk1, nvnFunction);
 	if (!strcmp("nvnDeviceGetProcAddress", nvnFunction))
@@ -523,6 +536,10 @@ uintptr_t nvnGetProcAddress (void* unk1, const char* nvnFunction) {
 	else if (!strcmp("nvnQueuePresentTexture", nvnFunction)) {
 		Ptrs.nvnQueuePresentTexture = address;
 		return Address.nvnQueuePresentTexture;
+	}
+	else if (!strcmp("nvnWindowAcquireTexture", nvnFunction)) {
+		Ptrs.nvnWindowAcquireTexture = address;
+		return Address.nvnWindowAcquireTexture;
 	}
 	else if (!strcmp("nvnWindowSetPresentInterval", nvnFunction)) {
 		Ptrs.nvnWindowSetPresentInterval = address;
@@ -574,6 +591,7 @@ int main(int argc, char *argv[]) {
 			
 			Address.nvnGetProcAddress = (uint64_t)&nvnGetProcAddress;
 			Address.nvnQueuePresentTexture = (uint64_t)&nvnPresentTexture;
+			Address.nvnWindowAcquireTexture = (uint64_t)&nvnAcquireTexture;
 			SaltySDCore_ReplaceImport("nvnBootstrapLoader", (void*)nvnBootstrapLoader_1);
 			SaltySDCore_ReplaceImport("eglSwapBuffers", (void*)eglSwap);
 			SaltySDCore_ReplaceImport("eglSwapInterval", (void*)eglInterval);
