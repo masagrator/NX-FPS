@@ -525,8 +525,7 @@ void* nvnAcquireTexture(void* nvnWindow, void* nvnSync, void* index) {
 	if (WindowSync != nvnSync) {
 		WindowSync = nvnSync;
 	}
-	void* ret = ((nvnWindowAcquireTexture_0)(Ptrs.nvnWindowAcquireTexture))(nvnWindow, nvnSync, index);
-	return ret;
+	return ((nvnWindowAcquireTexture_0)(Ptrs.nvnWindowAcquireTexture))(nvnWindow, nvnSync, index);
 }
 
 uintptr_t nvnGetProcAddress (void* unk1, const char* nvnFunction) {
