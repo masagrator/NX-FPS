@@ -4,11 +4,14 @@
 unsafeCheck: true
 
 MASTER_WRITE:
+  # Force double buffer
   -
     type: bytes
-    main_offset: 0x12345678
-    value_type: float
-    value: [32.0, 32.0]
+    main_offset: 0x347DAB8
+    value_type: uint32
+    value: 
+      # MOV W1, #2
+      - 0x52800041
 15FPS:
   # r.DynamicRes.FrameTimeBudget (1000/FPS) rounded to 1 decimal
   -
