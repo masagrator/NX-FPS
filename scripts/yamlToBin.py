@@ -122,6 +122,25 @@ DATA = []
 
 OBJECTS = ["15FPS", "20FPS", "25FPS", "30FPS", "35FPS", "40FPS", "45FPS", "50FPS", "55FPS", "60FPS"]
 
+version = 1
+
+MASTER_WRITE_TEMP = b""
+
+if "MASTER_WRITE" in DICT.keys():
+	version = 2
+	entry = []
+	for x in range(len(DICT["MASTER_WRITE"])):
+		match(DICT["MASTER_WRITE"][x]["type"]):
+			case "bytes":
+				entry.append(b"\x01")
+				entry.append(DICT["MASTER_WRITE"][x]["main_offset"].to_bytes(4, "little", signed=True))
+				entry.append(returnValue(DICT["MASTER_WRITE"][x]["value_type"], DICT["MASTER_WRITE"][x]["value"]))
+			case _:
+				print("WRONG TYPE: %s" % DICT["MASTER_WRITE"][x]["type"])
+				sys.exit()
+	entry.append(b"\xFF")
+	MASTER_WRITE_TEMP = b"".join(entry)
+
 for i in range(len(OBJECTS)):
 	entry = []
 	for x in range(len(DICT[OBJECTS[i]])):
@@ -198,17 +217,20 @@ for i in range(len(OBJECTS)):
 	entry.append(b"\xFF")
 	DATA.append(b"".join(entry))
 
+if (version == 2):
+	DATA.append(MASTER_WRITE_TEMP)
+
 new_file = open(f"{Path(sys.argv[1]).stem}.bin", "wb")
 new_file.write(b"LOCK")
-new_file.write(b"\x01\x00\x00")
+new_file.write(version.to_bytes(3, "little"))
 if (DICT["unsafeCheck"] == True):
 	new_file.write(b"\x01")
 else:
 	new_file.write(b"\x00")
-base = new_file.tell() + (4 * len(OBJECTS))
+base = new_file.tell() + (4 * len(DATA))
 offsets = []
 NEW_DATA = []
-for i in range(len(OBJECTS)):
+for i in range(len(DATA)):
 	if (DATA.index(DATA[i]) < i):
 		offset = offsets[DATA.index(DATA[i])]
 		new_file.write(offset.to_bytes(4, "little"))

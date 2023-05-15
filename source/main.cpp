@@ -40,15 +40,27 @@ Result readConfig(const char* path, uint8_t** output_buffer) {
 	FILE* patch_file = SaltySDCore_fopen(path, "rb");
 	SaltySDCore_fseek(patch_file, 0, 2);
 	configSize = SaltySDCore_ftell(patch_file);
-	SaltySDCore_fclose(patch_file);
-	uint8_t* buffer = (uint8_t*)calloc(1, configSize);
-	patch_file = SaltySDCore_fopen(path, "r");
-	SaltySDCore_fread(buffer, configSize, 1, patch_file);
-	SaltySDCore_fclose(patch_file);
-	if (!LOCK::isValid(buffer, configSize)) {
+	SaltySDCore_fseek(patch_file, 0, 0);
+	uint8_t* buffer = (uint8_t*)calloc(1, 0x34);
+	SaltySDCore_fread(buffer, 0x34, 1, patch_file);
+	if (SaltySDCore_ftell(patch_file) != 0x34 || !LOCK::isValid(buffer, 0x34)) {
+		SaltySDCore_fclose(patch_file);
 		free(buffer);
 		return 1;
 	}
+	if (LOCK::gen == 2) {
+		Result ret = LOCK::applyMasterWrite(patch_file, configSize);
+		if (R_FAILED(ret))  {
+			SaltySDCore_fclose(patch_file);
+			return ret;
+		}
+		configSize = *(uint32_t*)(&(buffer[0x30]));
+	}
+	free(buffer);
+	buffer = (uint8_t*)calloc(1, configSize);
+	SaltySDCore_fseek(patch_file, 0, 0);
+	SaltySDCore_fread(buffer, configSize, 1, patch_file);
+	SaltySDCore_fclose(patch_file);
 	*output_buffer = buffer;
 	return 0;
 }
@@ -88,7 +100,7 @@ struct {
 	uint8_t* FPSlocked = 0;
 	uint8_t* FPSmode = 0;
 	bool* ZeroSync = 0;
-	bool* patchApplied = 0;
+	uint8_t* patchApplied = 0;
 	uint8_t* API = 0;
 	uint32_t* FPSticks = 0;
 	uint8_t* Buffers = 0;
@@ -101,6 +113,7 @@ struct {
 	uintptr_t nvnWindowSetPresentInterval;
 	uintptr_t nvnWindowGetPresentInterval;
 	uintptr_t nvnWindowBuilderSetTextures;
+	uintptr_t nvnWindowAcquireTexture;
 	uintptr_t nvnSyncWait;
 } Ptrs;
 
@@ -109,6 +122,7 @@ struct {
 	uintptr_t nvnQueuePresentTexture;
 	uintptr_t nvnWindowSetPresentInterval;
 	uintptr_t nvnWindowBuilderSetTextures;
+	uintptr_t nvnWindowAcquireTexture;
 	uintptr_t nvnSyncWait;
 	uintptr_t nvnGetProcAddress;
 } Address;
@@ -126,9 +140,11 @@ typedef uintptr_t (*GetProcAddress)(void* unk1_a, const char * nvnFunction_a);
 bool changeFPS = false;
 bool changedFPS = false;
 typedef void (*nvnBuilderSetTextures_0)(void* nvnWindowBuilder, int buffers, void* texturesBuffer);
+typedef void* (*nvnWindowAcquireTexture_0)(void* nvnWindow, void* nvnSync, void* index);
 typedef void (*nvnSetPresentInterval_0)(void* nvnWindow, int mode);
 typedef int (*nvnGetPresentInterval_0)(void* nvnWindow);
 typedef void* (*nvnSyncWait_0)(void* _this, uint64_t timeout_ns);
+void* WindowSync = 0;
 
 inline void createBuildidPath(uint64_t buildid, char* titleid, char* buffer) {
 	strcpy(buffer, "sdmc:/SaltySD/plugins/FPSLocker/patches/0");
@@ -232,7 +248,7 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 		*(Shared.FPS) = Stats.FPS;
 		if (changeFPS && !configRC && FPSlock) {
 			LOCK::applyPatch(configBuffer, configSize, FPSlock);
-			*(Shared.patchApplied) = true;
+			*(Shared.patchApplied) = 1;
 		}
 	}
 
@@ -335,7 +351,7 @@ int eglSwap (void* EGLDisplay, void* EGLSurface) {
 		*(Shared.FPS) = Stats.FPS;
 		if (changeFPS && !configRC && FPSlock) {
 			LOCK::applyPatch(configBuffer, configSize, FPSlock);
-			*(Shared.patchApplied) = true;
+			*(Shared.patchApplied) = 1;
 		}
 	}
 	
@@ -395,7 +411,8 @@ void nvnSetPresentInterval(void* nvnWindow, int mode) {
 }
 
 void* nvnSyncWait0(void* _this, uint64_t timeout_ns) {
-	if (*(Shared.ZeroSync)) timeout_ns = 0;
+	if ((_this == WindowSync) && *(Shared.ZeroSync))
+		timeout_ns = 0;
 	return ((nvnSyncWait_0)(Ptrs.nvnSyncWait))(_this, timeout_ns);
 }
 
@@ -466,12 +483,22 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 		*(Shared.FPSmode) = (uint8_t)((nvnGetPresentInterval_0)(Ptrs.nvnWindowGetPresentInterval))(nvnWindow);
 		if (changeFPS && !configRC && FPSlock) {
 			LOCK::applyPatch(configBuffer, configSize, FPSlock);
-			*(Shared.patchApplied) = true;
+			*(Shared.patchApplied) = 1;
 		}
 	}
 
 	*(Shared.FPSavg) = Stats.FPSavg;
 	*(Shared.pluginActive) = true;
+
+
+	if (FPSlock == 30 || FPSlock == 60) {
+		if (!*(Shared.ZeroSync) && FPStiming) {
+			FPStiming = 0;
+		}
+		else if (*(Shared.ZeroSync) && !FPStiming) {
+			FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
+		}
+	}
 
 	if (FPSlock != *(Shared.FPSlocked)) {
 		changeFPS = true;
@@ -483,16 +510,22 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 		}
 		else if (*(Shared.FPSlocked) <= 30) {
 			nvnSetPresentInterval(nvnWindow, -2);
-			if (*(Shared.FPSlocked) != 30) {
-				FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
+			if (*(Shared.FPSlocked) != 30 || *(Shared.ZeroSync)) {
+				if (*(Shared.FPSlocked) == 30) {
+					FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
+				}
+				else FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
 			}
 			else FPStiming = 0;
 		}
 		else {
 			nvnSetPresentInterval(nvnWindow, -2); //This allows in game with glitched interval to unlock 60 FPS, f.e. WRC Generations
 			nvnSetPresentInterval(nvnWindow, -1);
-			if (*(Shared.FPSlocked) != 60) {
-				FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
+			if (*(Shared.FPSlocked) != 60 || *(Shared.ZeroSync)) {
+				if (*(Shared.FPSlocked) == 60) {
+					FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
+				}
+				else FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
 			}
 			else FPStiming = 0;
 		}
@@ -504,6 +537,13 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	return;
 }
 
+void* nvnAcquireTexture(void* nvnWindow, void* nvnSync, void* index) {
+	if (WindowSync != nvnSync) {
+		WindowSync = nvnSync;
+	}
+	return ((nvnWindowAcquireTexture_0)(Ptrs.nvnWindowAcquireTexture))(nvnWindow, nvnSync, index);
+}
+
 uintptr_t nvnGetProcAddress (void* unk1, const char* nvnFunction) {
 	uintptr_t address = ((GetProcAddress)(Ptrs.nvnDeviceGetProcAddress))(unk1, nvnFunction);
 	if (!strcmp("nvnDeviceGetProcAddress", nvnFunction))
@@ -511,6 +551,10 @@ uintptr_t nvnGetProcAddress (void* unk1, const char* nvnFunction) {
 	else if (!strcmp("nvnQueuePresentTexture", nvnFunction)) {
 		Ptrs.nvnQueuePresentTexture = address;
 		return Address.nvnQueuePresentTexture;
+	}
+	else if (!strcmp("nvnWindowAcquireTexture", nvnFunction)) {
+		Ptrs.nvnWindowAcquireTexture = address;
+		return Address.nvnWindowAcquireTexture;
 	}
 	else if (!strcmp("nvnWindowSetPresentInterval", nvnFunction)) {
 		Ptrs.nvnWindowSetPresentInterval = address;
@@ -562,6 +606,7 @@ int main(int argc, char *argv[]) {
 			
 			Address.nvnGetProcAddress = (uint64_t)&nvnGetProcAddress;
 			Address.nvnQueuePresentTexture = (uint64_t)&nvnPresentTexture;
+			Address.nvnWindowAcquireTexture = (uint64_t)&nvnAcquireTexture;
 			SaltySDCore_ReplaceImport("nvnBootstrapLoader", (void*)nvnBootstrapLoader_1);
 			SaltySDCore_ReplaceImport("eglSwapBuffers", (void*)eglSwap);
 			SaltySDCore_ReplaceImport("eglSwapInterval", (void*)eglInterval);
@@ -570,7 +615,7 @@ int main(int argc, char *argv[]) {
 			Shared.FPSlocked = (uint8_t*)(base + 10);
 			Shared.FPSmode = (uint8_t*)(base + 11);
 			Shared.ZeroSync = (bool*)(base + 12);
-			Shared.patchApplied = (bool*)(base + 13);
+			Shared.patchApplied = (uint8_t*)(base + 13);
 			Shared.API = (uint8_t*)(base + 14);
 			Shared.FPSticks = (uint32_t*)(base + 15);
 			Shared.Buffers = (uint8_t*)(base + 55);
@@ -606,7 +651,10 @@ int main(int argc, char *argv[]) {
 					SaltySDCore_fclose(patch_file);
 					SaltySDCore_printf("NX-FPS: FPSLocker: successfully opened: %s\n", path);
 					configRC = readConfig(path, &configBuffer);
-					SaltySDCore_printf("NX-FPS: FPSLocker: readConfig rc: %d\n", configRC);
+					if (LOCK::MasterWriteApplied) {
+						*(Shared.patchApplied) = 2;
+					}
+					SaltySDCore_printf("NX-FPS: FPSLocker: readConfig rc: 0x%x\n", configRC);
 					svcGetInfo(&LOCK::mappings.alias_start, InfoType_AliasRegionAddress, CUR_PROCESS_HANDLE, 0);
 					svcGetInfo(&LOCK::mappings.heap_start, InfoType_HeapRegionAddress, CUR_PROCESS_HANDLE, 0);
 				}

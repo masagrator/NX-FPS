@@ -8,6 +8,8 @@ namespace LOCK {
 
 	uint32_t offset = 0;
 	bool blockDelayFPS = false;
+	uint8_t gen = 0;
+	bool MasterWriteApplied = false;
 
 	struct {
 		int64_t main_start;
@@ -130,22 +132,88 @@ namespace LOCK {
 	bool isValid(uint8_t* buffer, size_t filesize) {
 		if (*(uint32_t*)buffer != 0x4B434F4C)
 			return false;
-		if (buffer[4] != 1)
+		gen = buffer[4];
+		if (gen < 1 || gen > 2)
 			return false;
 		if (*(uint16_t*)(&(buffer[5])) != 0)
 			return false;
 		if (buffer[7] > 1)
 			return false;
 		unsafeCheck = (bool)buffer[7];
-		if (*(uint32_t*)(&(buffer[8])) != 0x30)
-			return false;
-		uint32_t offset = *(uint32_t*)(&(buffer[0x2C]));
-		if (offset > filesize)
-			return false;
-		if (buffer[filesize-1] != 0xFF)
+		uint8_t start_offset = 0x30;
+		if (gen == 2)
+			start_offset += 4;
+		if (*(uint32_t*)(&(buffer[8])) != start_offset)
 			return false;
 		return true;
 
+	}
+
+	Result applyMasterWrite(FILE* file, size_t filesize) {
+		uint32_t offset = 0;
+		if (gen != 2) return 0x311;
+
+		SaltySDCore_fseek(file, 0x30, 0);
+		SaltySDCore_fread(&offset, 4, 1, file);
+		SaltySDCore_fseek(file, offset, 0);
+		if (SaltySDCore_ftell(file) != offset)
+			return 0x312;
+		
+		int8_t OPCODE = 0;
+		while(true) {
+			SaltySDCore_fread(&OPCODE, 1, 1, file);
+			if (OPCODE == 1) {
+				uint32_t main_offset = 0;
+				SaltySDCore_fread(&main_offset, 4, 1, file);
+				uint8_t value_type = 0;
+				SaltySDCore_fread(&value_type, 1, 1, file);
+				uint8_t elements = 0;
+				SaltySDCore_fread(&elements, 1, 1, file);
+				switch(value_type) {
+					case 1:
+					case 0x11: {
+						void* temp_buffer = calloc(elements, 1);
+						SaltySDCore_fread(temp_buffer, 1, elements, file);
+						SaltySD_Memcpy(LOCK::mappings.main_start + main_offset, (u64)temp_buffer, elements);
+						free(temp_buffer);
+						break;
+					}
+					case 2:
+					case 0x12: {
+						void* temp_buffer = calloc(elements, 2);
+						SaltySDCore_fread(temp_buffer, 2, elements, file);
+						SaltySD_Memcpy(LOCK::mappings.main_start + main_offset, (u64)temp_buffer, elements*2);
+						free(temp_buffer);
+						break;
+					}
+					case 4:
+					case 0x14:
+					case 0x24: {
+						void* temp_buffer = calloc(elements, 4);
+						SaltySDCore_fread(temp_buffer, 4, elements, file);
+						SaltySD_Memcpy(LOCK::mappings.main_start + main_offset, (u64)temp_buffer, elements*4);
+						free(temp_buffer);
+						break;
+					}
+					case 8:
+					case 0x18:
+					case 0x28: {
+						void* temp_buffer = calloc(elements, 8);
+						SaltySDCore_fread(temp_buffer, 8, elements, file);
+						SaltySD_Memcpy(LOCK::mappings.main_start + main_offset, (u64)temp_buffer, elements*8);
+						free(temp_buffer);
+						break;
+					}
+					default:
+						return 0x313;
+				}				
+			}
+			else if (OPCODE == -1) {
+				MasterWriteApplied = true;
+				return 0;
+			}
+			else return 0x355;
+		}
 	}
 
 	Result applyPatch(uint8_t* buffer, size_t filesize, uint8_t FPS) {
