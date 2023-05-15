@@ -490,8 +490,15 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	*(Shared.FPSavg) = Stats.FPSavg;
 	*(Shared.pluginActive) = true;
 
-	if (!*(Shared.ZeroSync) && (FPSlock == 30 || FPSlock == 60) && FPStiming)
-		FPStiming = 0;
+
+	if (FPSlock == 30 || FPSlock == 60) {
+		if (!*(Shared.ZeroSync) && FPStiming) {
+			FPStiming = 0;
+		}
+		else if (*(Shared.ZeroSync) && !FPStiming) {
+			FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
+		}
+	}
 
 	if (FPSlock != *(Shared.FPSlocked)) {
 		changeFPS = true;
@@ -504,7 +511,10 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 		else if (*(Shared.FPSlocked) <= 30) {
 			nvnSetPresentInterval(nvnWindow, -2);
 			if (*(Shared.FPSlocked) != 30 || *(Shared.ZeroSync)) {
-				FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
+				if (*(Shared.FPSlocked) == 30) {
+					FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
+				}
+				else FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
 			}
 			else FPStiming = 0;
 		}
@@ -512,7 +522,10 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 			nvnSetPresentInterval(nvnWindow, -2); //This allows in game with glitched interval to unlock 60 FPS, f.e. WRC Generations
 			nvnSetPresentInterval(nvnWindow, -1);
 			if (*(Shared.FPSlocked) != 60 || *(Shared.ZeroSync)) {
-				FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
+				if (*(Shared.FPSlocked) == 60) {
+					FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
+				}
+				else FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
 			}
 			else FPStiming = 0;
 		}
