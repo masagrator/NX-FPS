@@ -492,7 +492,6 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 
 	if (!*(Shared.ZeroSync) && (FPSlock == 30 || FPSlock == 60) && FPStiming)
 		FPStiming = 0;
-	}
 
 	if (FPSlock != *(Shared.FPSlocked)) {
 		changeFPS = true;
@@ -642,7 +641,7 @@ int main(int argc, char *argv[]) {
 					if (LOCK::MasterWriteApplied) {
 						*(Shared.patchApplied) = 2;
 					}
-					SaltySDCore_printf("NX-FPS: FPSLocker: readConfig rc: %d\n", configRC);
+					SaltySDCore_printf("NX-FPS: FPSLocker: readConfig rc: 0x%x\n", configRC);
 					svcGetInfo(&LOCK::mappings.alias_start, InfoType_AliasRegionAddress, CUR_PROCESS_HANDLE, 0);
 					svcGetInfo(&LOCK::mappings.heap_start, InfoType_HeapRegionAddress, CUR_PROCESS_HANDLE, 0);
 				}

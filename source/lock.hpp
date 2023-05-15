@@ -155,12 +155,11 @@ namespace LOCK {
 
 		SaltySDCore_fseek(file, 0x30, 0);
 		SaltySDCore_fread(&offset, 4, 1, file);
-		SaltySDCore_fseek(file, 0, 2);
 		SaltySDCore_fseek(file, offset, 0);
 		if (SaltySDCore_ftell(file) != offset)
 			return 0x312;
 		
-		uint8_t OPCODE = 0;
+		int8_t OPCODE = 0;
 		while(true) {
 			SaltySDCore_fread(&OPCODE, 1, 1, file);
 			if (OPCODE == 1) {
