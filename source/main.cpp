@@ -435,6 +435,16 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 		starttick = _ZN2nn2os13GetSystemTickEv();
 		*(Shared.FPSmode) = (uint8_t)((nvnGetPresentInterval_0)(Ptrs.nvnWindowGetPresentInterval))(nvnWindow);
 	}
+
+	if (FPSlock == 30 || FPSlock == 60) {
+		if (!*(Shared.ZeroSync) && FPStiming) {
+			FPStiming = 0;
+		}
+		else if (*(Shared.ZeroSync) && !FPStiming) {
+			FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
+		}
+	}
+
 	if (FPStiming && !LOCK::blockDelayFPS) {
 		if ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
 			FPSlock_delayed = true;
@@ -489,16 +499,6 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 
 	*(Shared.FPSavg) = Stats.FPSavg;
 	*(Shared.pluginActive) = true;
-
-
-	if (FPSlock == 30 || FPSlock == 60) {
-		if (!*(Shared.ZeroSync) && FPStiming) {
-			FPStiming = 0;
-		}
-		else if (*(Shared.ZeroSync) && !FPStiming) {
-			FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
-		}
-	}
 
 	if (FPSlock != *(Shared.FPSlocked)) {
 		changeFPS = true;
