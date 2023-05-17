@@ -414,8 +414,14 @@ void nvnSetPresentInterval(void* nvnWindow, int mode) {
 void* nvnSyncWait0(void* _this, uint64_t timeout_ns) {
 	uint64_t endFrameTick = _ZN2nn2os13GetSystemTickEv();
 	if ((_this == WindowSync) && *(Shared.ZeroSync)) {
-		if (endFrameTick - startFrameTick > (19200000 / 61))
-			timeout_ns = 0;
+		if (*(Shared.FPSmode) < 2) {
+			if (endFrameTick - startFrameTick > (19200000 / 61))
+				timeout_ns = 0;
+		}
+		else if (*(Shared.FPSmode) == 2) {
+			if (endFrameTick - startFrameTick > (19200000 / 31))
+				timeout_ns = 0;
+		}
 	}
 	return ((nvnSyncWait_0)(Ptrs.nvnSyncWait))(_this, timeout_ns);
 }
