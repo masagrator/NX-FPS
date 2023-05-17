@@ -145,6 +145,7 @@ typedef void (*nvnSetPresentInterval_0)(void* nvnWindow, int mode);
 typedef int (*nvnGetPresentInterval_0)(void* nvnWindow);
 typedef void* (*nvnSyncWait_0)(void* _this, uint64_t timeout_ns);
 void* WindowSync = 0;
+uint64_t startFrameTick = 0;
 
 inline void createBuildidPath(uint64_t buildid, char* titleid, char* buffer) {
 	strcpy(buffer, "sdmc:/SaltySD/plugins/FPSLocker/patches/0");
@@ -411,8 +412,11 @@ void nvnSetPresentInterval(void* nvnWindow, int mode) {
 }
 
 void* nvnSyncWait0(void* _this, uint64_t timeout_ns) {
-	if ((_this == WindowSync) && *(Shared.ZeroSync))
-		timeout_ns = 0;
+	uint64_t endFrameTick = _ZN2nn2os13GetSystemTickEv();
+	if ((_this == WindowSync) && *(Shared.ZeroSync)) {
+		if (endFrameTick - startFrameTick > (19200000 / 61))
+			timeout_ns = 0;
+	}
 	return ((nvnSyncWait_0)(Ptrs.nvnSyncWait))(_this, timeout_ns);
 }
 
@@ -434,15 +438,6 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	if (!starttick) {
 		starttick = _ZN2nn2os13GetSystemTickEv();
 		*(Shared.FPSmode) = (uint8_t)((nvnGetPresentInterval_0)(Ptrs.nvnWindowGetPresentInterval))(nvnWindow);
-	}
-
-	if (FPSlock == 30 || FPSlock == 60) {
-		if (!*(Shared.ZeroSync) && FPStiming) {
-			FPStiming = 0;
-		}
-		else if (*(Shared.ZeroSync) && !FPStiming) {
-			FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
-		}
 	}
 
 	if (FPStiming && !LOCK::blockDelayFPS) {
@@ -510,22 +505,16 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 		}
 		else if (*(Shared.FPSlocked) <= 30) {
 			nvnSetPresentInterval(nvnWindow, -2);
-			if (*(Shared.FPSlocked) != 30 || *(Shared.ZeroSync)) {
-				if (*(Shared.FPSlocked) == 30) {
-					FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
-				}
-				else FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
+			if (*(Shared.FPSlocked) != 30) {
+				FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
 			}
 			else FPStiming = 0;
 		}
 		else {
 			nvnSetPresentInterval(nvnWindow, -2); //This allows in game with glitched interval to unlock 60 FPS, f.e. WRC Generations
 			nvnSetPresentInterval(nvnWindow, -1);
-			if (*(Shared.FPSlocked) != 60 || *(Shared.ZeroSync)) {
-				if (*(Shared.FPSlocked) == 60) {
-					FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
-				}
-				else FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
+			if (*(Shared.FPSlocked) != 60) {
+				FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
 			}
 			else FPStiming = 0;
 		}
@@ -541,7 +530,9 @@ void* nvnAcquireTexture(void* nvnWindow, void* nvnSync, void* index) {
 	if (WindowSync != nvnSync) {
 		WindowSync = nvnSync;
 	}
-	return ((nvnWindowAcquireTexture_0)(Ptrs.nvnWindowAcquireTexture))(nvnWindow, nvnSync, index);
+	void* ret = ((nvnWindowAcquireTexture_0)(Ptrs.nvnWindowAcquireTexture))(nvnWindow, nvnSync, index);
+	startFrameTick = _ZN2nn2os13GetSystemTickEv();
+	return ret;
 }
 
 uintptr_t nvnGetProcAddress (void* unk1, const char* nvnFunction) {
