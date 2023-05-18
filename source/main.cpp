@@ -22,7 +22,6 @@ extern "C" {
 	extern int eglSwapBuffers(void* EGLDisplay, void* EGLSurface) LINKABLE;
 	extern int eglSwapInterval(void* EGLDisplay, int interval) LINKABLE;
 	extern u32 vkQueuePresentKHR(void* vk_unk1, void* vk_unk2) LINKABLE;
-	extern u32 _ZN2nn2oe15SetCpuBoostModeENS0_12CpuBoostModeE(bool CpuBoostMode) LINKABLE;
 }
 
 u32 __nx_applet_type = AppletType_None;
@@ -631,7 +630,6 @@ int main(int argc, char *argv[]) {
 			Address.nvnQueuePresentTexture = (uint64_t)&nvnPresentTexture;
 			Address.nvnWindowAcquireTexture = (uint64_t)&nvnAcquireTexture;
 			SaltySDCore_ReplaceImport("nvnBootstrapLoader", (void*)nvnBootstrapLoader_1);
-			SaltySDCore_ReplaceImport("_ZN2nn2oe15SetCpuBoostModeENS0_12CpuBoostModeE", (void*)SetCpuBoostMode);
 			SaltySDCore_ReplaceImport("eglSwapBuffers", (void*)eglSwap);
 			SaltySDCore_ReplaceImport("eglSwapInterval", (void*)eglInterval);
 			SaltySDCore_ReplaceImport("vkQueuePresentKHR", (void*)vulkanSwap);
