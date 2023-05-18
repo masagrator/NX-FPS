@@ -22,6 +22,7 @@ extern "C" {
 	extern int eglSwapBuffers(void* EGLDisplay, void* EGLSurface) LINKABLE;
 	extern int eglSwapInterval(void* EGLDisplay, int interval) LINKABLE;
 	extern u32 vkQueuePresentKHR(void* vk_unk1, void* vk_unk2) LINKABLE;
+	extern u32 _ZN2nn2oe15SetCpuBoostModeENS0_12CpuBoostModeE(bool CpuBoostMode) LINKABLE;
 }
 
 u32 __nx_applet_type = AppletType_None;
@@ -145,16 +146,8 @@ typedef int (*nvnGetPresentInterval_0)(void* nvnWindow);
 typedef void* (*nvnSyncWait_0)(void* _this, uint64_t timeout_ns);
 void* WindowSync = 0;
 uint64_t startFrameTick = 0;
-
-enum {
-	ZeroSyncType_None = 0,
-	ZeroSyncType_1F = 1,
-	ZeroSyncType_2F = 2,
-	ZeroSyncType_3F = 3,
-	ZeroSyncType_4F = 4,
-	ZeroSyncType_5F = 5,
-	ZeroSyncType_Soft = 6
-};
+bool is60FPSchain = false;
+bool isCPUBoosted = false;
 
 inline void createBuildidPath(uint64_t buildid, char* titleid, char* buffer) {
 	strcpy(buffer, "sdmc:/SaltySD/plugins/FPSLocker/patches/0");
@@ -425,10 +418,15 @@ void* nvnSyncWait0(void* _this, uint64_t timeout_ns) {
 	if (_this == WindowSync) {
 		if (*(Shared.ZeroSync)) {
 			if (*(Shared.FPSlocked) != 60) {
+				is60FPSchain = false;
 				timeout_ns = 0;
 			}
 			else if (endFrameTick - startFrameTick > uint64_t(19200000 / 120)) {
+				is60FPSchain = false;
 				timeout_ns = 0;
+			}
+			else if (!is60FPSchain) {
+				is60FPSchain = true;
 			}
 		}
 	}
@@ -449,6 +447,7 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	static uint8_t range = 0;
 	
 	bool FPSlock_delayed = false;
+	bool skip60FPSdelay = false;
 
 	if (!starttick) {
 		starttick = _ZN2nn2os13GetSystemTickEv();
@@ -456,7 +455,10 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	}
 	
 	if (FPSlock == 60) {
-		if (!*(Shared.ZeroSync) && FPStiming) {
+		if (is60FPSchain || isCPUBoosted) {
+			skip60FPSdelay = true;
+		}
+		else if (!*(Shared.ZeroSync) && FPStiming) {
 			FPStiming = 0;
 		}
 		else if (*(Shared.ZeroSync) && !FPStiming) {
@@ -464,7 +466,7 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 		}
 	}
 
-	if (FPStiming && !LOCK::blockDelayFPS) {
+	if (!skip60FPSdelay && FPStiming && !LOCK::blockDelayFPS) {
 		if ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
 			FPSlock_delayed = true;
 		}
@@ -629,6 +631,7 @@ int main(int argc, char *argv[]) {
 			Address.nvnQueuePresentTexture = (uint64_t)&nvnPresentTexture;
 			Address.nvnWindowAcquireTexture = (uint64_t)&nvnAcquireTexture;
 			SaltySDCore_ReplaceImport("nvnBootstrapLoader", (void*)nvnBootstrapLoader_1);
+			SaltySDCore_ReplaceImport("_ZN2nn2oe15SetCpuBoostModeENS0_12CpuBoostModeE", (void*)SetCpuBoostMode);
 			SaltySDCore_ReplaceImport("eglSwapBuffers", (void*)eglSwap);
 			SaltySDCore_ReplaceImport("eglSwapInterval", (void*)eglInterval);
 			SaltySDCore_ReplaceImport("vkQueuePresentKHR", (void*)vulkanSwap);
