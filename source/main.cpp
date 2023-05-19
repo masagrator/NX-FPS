@@ -146,7 +146,12 @@ typedef void* (*nvnSyncWait_0)(void* _this, uint64_t timeout_ns);
 void* WindowSync = 0;
 uint64_t startFrameTick = 0;
 bool is60FPSchain = false;
-bool isCPUBoosted = false;
+
+enum {
+	ZeroSyncType_None,
+	ZeroSyncType_Soft,
+	ZeroSyncType_Semi
+};
 
 inline void createBuildidPath(uint64_t buildid, char* titleid, char* buffer) {
 	strcpy(buffer, "sdmc:/SaltySD/plugins/FPSLocker/patches/0");
@@ -415,7 +420,7 @@ void nvnSetPresentInterval(void* nvnWindow, int mode) {
 void* nvnSyncWait0(void* _this, uint64_t timeout_ns) {
 	uint64_t endFrameTick = _ZN2nn2os13GetSystemTickEv();
 	if (_this == WindowSync) {
-		if (*(Shared.ZeroSync)) {
+		if (*(Shared.ZeroSync) == ZeroSyncType_Semi) {
 			if (*(Shared.FPSlocked) != 60) {
 				is60FPSchain = false;
 				timeout_ns = 0;
@@ -428,6 +433,7 @@ void* nvnSyncWait0(void* _this, uint64_t timeout_ns) {
 				is60FPSchain = true;
 			}
 		}
+		else timeout_ns = 0;
 	}
 	return ((nvnSyncWait_0)(Ptrs.nvnSyncWait))(_this, timeout_ns);
 }
@@ -454,13 +460,13 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	}
 	
 	if (FPSlock == 60) {
-		if (is60FPSchain || isCPUBoosted) {
+		if (is60FPSchain) {
 			skip60FPSdelay = true;
 		}
-		else if (!*(Shared.ZeroSync) && FPStiming) {
+		else if ((*(Shared.ZeroSync) == ZeroSyncType_None) && FPStiming) {
 			FPStiming = 0;
 		}
-		else if (*(Shared.ZeroSync) && !FPStiming) {
+		else if ((*(Shared.ZeroSync) != ZeroSyncType_None) && !FPStiming) {
 			FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
 		}
 	}
