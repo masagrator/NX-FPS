@@ -35,7 +35,6 @@ uint8_t* configBuffer = 0;
 size_t configSize = 0;
 Result configRC = 1;
 
-
 Result readConfig(const char* path, uint8_t** output_buffer) {
 	FILE* patch_file = SaltySDCore_fopen(path, "rb");
 	SaltySDCore_fseek(patch_file, 0, 2);
@@ -99,7 +98,7 @@ struct {
 	bool* pluginActive = 0;
 	uint8_t* FPSlocked = 0;
 	uint8_t* FPSmode = 0;
-	bool* ZeroSync = 0;
+	uint8_t* ZeroSync = 0;
 	uint8_t* patchApplied = 0;
 	uint8_t* API = 0;
 	uint32_t* FPSticks = 0;
@@ -145,6 +144,14 @@ typedef void (*nvnSetPresentInterval_0)(void* nvnWindow, int mode);
 typedef int (*nvnGetPresentInterval_0)(void* nvnWindow);
 typedef void* (*nvnSyncWait_0)(void* _this, uint64_t timeout_ns);
 void* WindowSync = 0;
+uint64_t startFrameTick = 0;
+bool is60FPSchain = false;
+
+enum {
+	ZeroSyncType_None,
+	ZeroSyncType_Soft,
+	ZeroSyncType_Semi
+};
 
 inline void createBuildidPath(uint64_t buildid, char* titleid, char* buffer) {
 	strcpy(buffer, "sdmc:/SaltySD/plugins/FPSLocker/patches/0");
@@ -411,8 +418,23 @@ void nvnSetPresentInterval(void* nvnWindow, int mode) {
 }
 
 void* nvnSyncWait0(void* _this, uint64_t timeout_ns) {
-	if ((_this == WindowSync) && *(Shared.ZeroSync))
-		timeout_ns = 0;
+	uint64_t endFrameTick = _ZN2nn2os13GetSystemTickEv();
+	if (_this == WindowSync) {
+		if (*(Shared.ZeroSync) == ZeroSyncType_Semi) {
+			if (*(Shared.FPSlocked) != 60) {
+				is60FPSchain = false;
+				timeout_ns = 0;
+			}
+			else if (endFrameTick - startFrameTick > uint64_t(19200000 / 120)) {
+				is60FPSchain = false;
+				timeout_ns = 0;
+			}
+			else if (!is60FPSchain) {
+				is60FPSchain = true;
+			}
+		}
+		else timeout_ns = 0;
+	}
 	return ((nvnSyncWait_0)(Ptrs.nvnSyncWait))(_this, timeout_ns);
 }
 
@@ -430,22 +452,26 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 	static uint8_t range = 0;
 	
 	bool FPSlock_delayed = false;
+	bool skip60FPSdelay = false;
 
 	if (!starttick) {
 		starttick = _ZN2nn2os13GetSystemTickEv();
 		*(Shared.FPSmode) = (uint8_t)((nvnGetPresentInterval_0)(Ptrs.nvnWindowGetPresentInterval))(nvnWindow);
 	}
-
-	if (FPSlock == 30 || FPSlock == 60) {
-		if (!*(Shared.ZeroSync) && FPStiming) {
+	
+	if (FPSlock == 60) {
+		if (is60FPSchain) {
+			skip60FPSdelay = true;
+		}
+		else if ((*(Shared.ZeroSync) == ZeroSyncType_None) && FPStiming) {
 			FPStiming = 0;
 		}
-		else if (*(Shared.ZeroSync) && !FPStiming) {
+		else if ((*(Shared.ZeroSync) != ZeroSyncType_None) && !FPStiming) {
 			FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
 		}
 	}
 
-	if (FPStiming && !LOCK::blockDelayFPS) {
+	if (!skip60FPSdelay && FPStiming && !LOCK::blockDelayFPS) {
 		if ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
 			FPSlock_delayed = true;
 		}
@@ -541,7 +567,9 @@ void* nvnAcquireTexture(void* nvnWindow, void* nvnSync, void* index) {
 	if (WindowSync != nvnSync) {
 		WindowSync = nvnSync;
 	}
-	return ((nvnWindowAcquireTexture_0)(Ptrs.nvnWindowAcquireTexture))(nvnWindow, nvnSync, index);
+	void* ret = ((nvnWindowAcquireTexture_0)(Ptrs.nvnWindowAcquireTexture))(nvnWindow, nvnSync, index);
+	startFrameTick = _ZN2nn2os13GetSystemTickEv();
+	return ret;
 }
 
 uintptr_t nvnGetProcAddress (void* unk1, const char* nvnFunction) {
@@ -614,7 +642,7 @@ int main(int argc, char *argv[]) {
 
 			Shared.FPSlocked = (uint8_t*)(base + 10);
 			Shared.FPSmode = (uint8_t*)(base + 11);
-			Shared.ZeroSync = (bool*)(base + 12);
+			Shared.ZeroSync = (uint8_t*)(base + 12);
 			Shared.patchApplied = (uint8_t*)(base + 13);
 			Shared.API = (uint8_t*)(base + 14);
 			Shared.FPSticks = (uint32_t*)(base + 15);
@@ -635,7 +663,7 @@ int main(int argc, char *argv[]) {
 				SaltySDCore_fread(&temp, 1, 1, file_dat);
 				*(Shared.FPSlocked) = temp;
 				SaltySDCore_fread(&temp, 1, 1, file_dat);
-				*(Shared.ZeroSync) = (bool)temp;
+				*(Shared.ZeroSync) = temp;
 				SaltySDCore_fclose(file_dat);
 			}
 
