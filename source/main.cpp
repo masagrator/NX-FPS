@@ -459,7 +459,7 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 		if (is60FPSchain && FPSlock == 60) {
 			skip60FPSdelay = true;
 		}
-		else if ((*(Shared.ZeroSync) == ZeroSyncType_None) && FPStiming) {
+		else if ((*(Shared.ZeroSync) == ZeroSyncType_None) && FPStiming && (FPSlock == 60 || FPSlock == 30)) {
 			FPStiming = 0;
 		}
 		else if ((*(Shared.ZeroSync) != ZeroSyncType_None) && !FPStiming) {
