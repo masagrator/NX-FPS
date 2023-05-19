@@ -455,15 +455,18 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 		*(Shared.FPSmode) = (uint8_t)((nvnGetPresentInterval_0)(Ptrs.nvnWindowGetPresentInterval))(nvnWindow);
 	}
 	
-	if (FPSlock == 60) {
-		if (is60FPSchain) {
+	if (FPSlock) {
+		if (is60FPSchain && FPSlock == 60) {
 			skip60FPSdelay = true;
 		}
 		else if ((*(Shared.ZeroSync) == ZeroSyncType_None) && FPStiming) {
 			FPStiming = 0;
 		}
 		else if ((*(Shared.ZeroSync) != ZeroSyncType_None) && !FPStiming) {
-			FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
+			if (FPSlock == 60) {
+				FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
+			}
+			else FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
 		}
 	}
 
