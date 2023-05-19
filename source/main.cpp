@@ -421,11 +421,7 @@ void* nvnSyncWait0(void* _this, uint64_t timeout_ns) {
 	uint64_t endFrameTick = _ZN2nn2os13GetSystemTickEv();
 	if (_this == WindowSync) {
 		if (*(Shared.ZeroSync) == ZeroSyncType_Semi) {
-			if (*(Shared.FPSlocked) != 60) {
-				is60FPSchain = false;
-				timeout_ns = 0;
-			}
-			else if (endFrameTick - startFrameTick > uint64_t(19200000 / 120)) {
+			if (endFrameTick - startFrameTick > uint64_t(19200000 / 120)) {
 				is60FPSchain = false;
 				timeout_ns = 0;
 			}
