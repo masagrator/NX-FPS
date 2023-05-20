@@ -429,7 +429,7 @@ void* nvnSyncWait0(void* _this, uint64_t timeout_ns) {
 				is60FPSchain = true;
 			}
 		}
-		else timeout_ns = 0;
+		else if (*(Shared.ZeroSync) == ZeroSyncType_Soft) timeout_ns = 0;
 	}
 	return ((nvnSyncWait_0)(Ptrs.nvnSyncWait))(_this, timeout_ns);
 }
