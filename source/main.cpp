@@ -424,7 +424,7 @@ void* nvnSyncWait0(void* _this, uint64_t timeout_ns) {
 			u64 FrameTarget = (systemtickfrequency/60) - 8000;
 			s64 new_timeout = (FrameTarget - (endFrameTick - startFrameTick)) - 19200;
 			if (*(Shared.FPSlocked) == 60) {
-				new_timeout = (systemtickfrequency/120) - (endFrameTick - startFrameTick);
+				new_timeout = (systemtickfrequency/101) - (endFrameTick - startFrameTick);
 			}
 			if (new_timeout > 0) {
 				timeout_ns = _ZN2nn2os17ConvertToTimeSpanENS0_4TickE(new_timeout);
