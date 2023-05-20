@@ -19,12 +19,10 @@ extern "C" {
 	void __libc_init_array(void);
 	extern u64 nvnBootstrapLoader(const char * nvnName) LINKABLE;
 	extern u64 _ZN2nn2os13GetSystemTickEv() LINKABLE;
-	extern void _ZN2nn2os11YieldThreadEv() LINKABLE;
-	extern void _ZN2nn2os11SleepThreadENS_8TimeSpanE(u64 nanoseconds) LINKABLE;
-	extern u64 _ZN2nn2os17ConvertToTimeSpanENS0_4TickE(u64 Tick) LINKABLE;
 	extern int eglSwapBuffers(void* EGLDisplay, void* EGLSurface) LINKABLE;
 	extern int eglSwapInterval(void* EGLDisplay, int interval) LINKABLE;
 	extern u32 vkQueuePresentKHR(void* vk_unk1, void* vk_unk2) LINKABLE;
+	extern u64 _ZN2nn2os17ConvertToTimeSpanENS0_4TickE(u64 tick) LINKABLE;
 }
 
 u32 __nx_applet_type = AppletType_None;
@@ -214,7 +212,7 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 			FPSlock_delayed = true;
 		}
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
-			_ZN2nn2os11YieldThreadEv();
+			svcSleepThread(-2);
 		}
 	}
 
@@ -317,7 +315,7 @@ int eglSwap (void* EGLDisplay, void* EGLSurface) {
 			FPSlock_delayed = true;
 		}
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
-			_ZN2nn2os11YieldThreadEv();
+			svcSleepThread(-2);
 		}
 	}
 	
@@ -423,14 +421,15 @@ void* nvnSyncWait0(void* _this, uint64_t timeout_ns) {
 	uint64_t endFrameTick = _ZN2nn2os13GetSystemTickEv();
 	if (_this == WindowSync) {
 		if (*(Shared.ZeroSync) == ZeroSyncType_Semi) {
-			u64 FPStimingTemp = (systemtickfrequency/60) - 8000;
-			s64 new_timeout = FPStimingTemp - (endFrameTick - startFrameTick);
-			if (new_timeout - 19200 > 0) {
-				timeout_ns = _ZN2nn2os17ConvertToTimeSpanENS0_4TickE(new_timeout) - 1000000;
+			u64 FrameTarget = (systemtickfrequency/60) - 8000;
+			s64 new_timeout = (FrameTarget - (endFrameTick - startFrameTick)) - 19200;
+			if (new_timeout > 0) {
+				timeout_ns = _ZN2nn2os17ConvertToTimeSpanENS0_4TickE(new_timeout);
 			}
 			else timeout_ns = 0;
 		}
-		else if (*(Shared.ZeroSync) == ZeroSyncType_Soft) timeout_ns = 0;
+		else if (*(Shared.ZeroSync) == ZeroSyncType_Soft) 
+			timeout_ns = 0;
 	}
 	return ((nvnSyncWait_0)(Ptrs.nvnSyncWait))(_this, timeout_ns);
 }
@@ -463,9 +462,7 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 			if (FPSlock == 60) {
 				FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 8000;
 			}
-			else {
-				FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
-			}
+			else FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
 		}
 	}
 
@@ -474,7 +471,7 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 			FPSlock_delayed = true;
 		}
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
-			_ZN2nn2os11YieldThreadEv();
+			svcSleepThread(-2);
 		}
 	}
 	
