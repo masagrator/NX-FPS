@@ -35,6 +35,7 @@ ptrdiff_t SharedMemoryOffset = 1234;
 uint8_t* configBuffer = 0;
 size_t configSize = 0;
 Result configRC = 1;
+uint8_t changeBuffers = 0;
 
 Result readConfig(const char* path, uint8_t** output_buffer) {
 	FILE* patch_file = SaltySDCore_fopen(path, "rb");
@@ -104,6 +105,7 @@ struct {
 	uint8_t* API = 0;
 	uint32_t* FPSticks = 0;
 	uint8_t* Buffers = 0;
+	uint8_t* SetBuffers = 0;
 } Shared;
 
 struct {
@@ -114,6 +116,8 @@ struct {
 	uintptr_t nvnWindowGetPresentInterval;
 	uintptr_t nvnWindowBuilderSetTextures;
 	uintptr_t nvnWindowAcquireTexture;
+	uintptr_t nvnWindowGetNumActiveTextures;
+	uintptr_t nvnWindowSetNumActiveTextures;
 	uintptr_t nvnSyncWait;
 } Ptrs;
 
@@ -123,6 +127,8 @@ struct {
 	uintptr_t nvnWindowSetPresentInterval;
 	uintptr_t nvnWindowBuilderSetTextures;
 	uintptr_t nvnWindowAcquireTexture;
+	uintptr_t nvnWindowGetNumActiveTextures;
+	uintptr_t nvnWindowSetNumActiveTextures;
 	uintptr_t nvnSyncWait;
 	uintptr_t nvnGetProcAddress;
 } Address;
@@ -397,6 +403,9 @@ int eglSwap (void* EGLDisplay, void* EGLSurface) {
 
 void nvnWindowBuilderSetTextures(void* nvnWindowBuilder, int numBufferedFrames, void* nvnTextures) {
 	*(Shared.Buffers) = numBufferedFrames;
+	if (*(Shared.SetBuffers) >= 2 && *(Shared.SetBuffers) <= numBufferedFrames) {
+		numBufferedFrames = *(Shared.SetBuffers);
+	}
 	return ((nvnBuilderSetTextures_0)(Ptrs.nvnWindowBuilderSetTextures))(nvnWindowBuilder, numBufferedFrames, nvnTextures);
 }
 
@@ -474,7 +483,7 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 			FPSlock_delayed = true;
 		}
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
-			svcSleepThread(-2);
+			svcSleepThread(-1);
 		}
 	}
 	
@@ -615,7 +624,7 @@ int main(int argc, char *argv[]) {
 	SaltySDCore_printf("NX-FPS: alive\n");
 	LOCK::mappings.main_start = getMainAddress();
 	SaltySDCore_printf("NX-FPS: found main at: 0x%lX\n", LOCK::mappings.main_start);
-	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 56);
+	Result ret = SaltySD_CheckIfSharedMemoryAvailable(&SharedMemoryOffset, 57);
 	SaltySDCore_printf("NX-FPS: ret: 0x%X\n", ret);
 	if (!ret) {
 		SaltySDCore_printf("NX-FPS: MemoryOffset: %d\n", SharedMemoryOffset);
@@ -645,9 +654,12 @@ int main(int argc, char *argv[]) {
 			Shared.API = (uint8_t*)(base + 14);
 			Shared.FPSticks = (uint32_t*)(base + 15);
 			Shared.Buffers = (uint8_t*)(base + 55);
+			Shared.SetBuffers = (uint8_t*)(base + 56);
 			Address.nvnWindowSetPresentInterval = (uint64_t)&nvnSetPresentInterval;
 			Address.nvnSyncWait = (uint64_t)&nvnSyncWait0;
 			Address.nvnWindowBuilderSetTextures = (uint64_t)&nvnWindowBuilderSetTextures;
+			Ptrs.nvnWindowGetNumActiveTextures = 0;
+			Ptrs.nvnWindowSetNumActiveTextures = 0;
 
 			char titleid[17];
 			CheckTitleID(&titleid[0]);
@@ -662,6 +674,8 @@ int main(int argc, char *argv[]) {
 				*(Shared.FPSlocked) = temp;
 				SaltySDCore_fread(&temp, 1, 1, file_dat);
 				*(Shared.ZeroSync) = temp;
+				if (SaltySDCore_fread(&temp, 1, 1, file_dat))
+					*(Shared.SetBuffers) = temp;
 				SaltySDCore_fclose(file_dat);
 			}
 
