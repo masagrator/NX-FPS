@@ -35,7 +35,6 @@ ptrdiff_t SharedMemoryOffset = 1234;
 uint8_t* configBuffer = 0;
 size_t configSize = 0;
 Result configRC = 1;
-uint8_t changeBuffers = 0;
 
 Result readConfig(const char* path, uint8_t** output_buffer) {
 	FILE* patch_file = SaltySDCore_fopen(path, "rb");
@@ -116,8 +115,6 @@ struct {
 	uintptr_t nvnWindowGetPresentInterval;
 	uintptr_t nvnWindowBuilderSetTextures;
 	uintptr_t nvnWindowAcquireTexture;
-	uintptr_t nvnWindowGetNumActiveTextures;
-	uintptr_t nvnWindowSetNumActiveTextures;
 	uintptr_t nvnSyncWait;
 } Ptrs;
 
@@ -127,8 +124,6 @@ struct {
 	uintptr_t nvnWindowSetPresentInterval;
 	uintptr_t nvnWindowBuilderSetTextures;
 	uintptr_t nvnWindowAcquireTexture;
-	uintptr_t nvnWindowGetNumActiveTextures;
-	uintptr_t nvnWindowSetNumActiveTextures;
 	uintptr_t nvnSyncWait;
 	uintptr_t nvnGetProcAddress;
 } Address;
@@ -483,7 +478,7 @@ void nvnPresentTexture(void* _this, void* nvnWindow, void* unk3) {
 			FPSlock_delayed = true;
 		}
 		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
-			svcSleepThread(-1);
+			svcSleepThread(-2);
 		}
 	}
 	
@@ -658,8 +653,6 @@ int main(int argc, char *argv[]) {
 			Address.nvnWindowSetPresentInterval = (uint64_t)&nvnSetPresentInterval;
 			Address.nvnSyncWait = (uint64_t)&nvnSyncWait0;
 			Address.nvnWindowBuilderSetTextures = (uint64_t)&nvnWindowBuilderSetTextures;
-			Ptrs.nvnWindowGetNumActiveTextures = 0;
-			Ptrs.nvnWindowSetNumActiveTextures = 0;
 
 			char titleid[17];
 			CheckTitleID(&titleid[0]);
