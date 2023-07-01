@@ -17,12 +17,14 @@ extern "C" {
 	void __nx_exit(int, void*);
 	void __libc_fini_array(void);
 	void __libc_init_array(void);
+
 	extern u64 nvnBootstrapLoader(const char * nvnName) LINKABLE;
-	extern u64 _ZN2nn2os13GetSystemTickEv() LINKABLE;
 	extern int eglSwapBuffers(void* EGLDisplay, void* EGLSurface) LINKABLE;
 	extern int eglSwapInterval(void* EGLDisplay, int interval) LINKABLE;
-	extern u32 vkQueuePresentKHR(void* vk_unk1, void* vk_unk2) LINKABLE;
+	extern u32 vkQueuePresentKHR(void* vkQueue, void* VkPresentInfoKHR) LINKABLE;
+	extern u32 _ZN11NvSwapchain15QueuePresentKHREP9VkQueue_TPK16VkPresentInfoKHR(void* VkQueue_T, void* VkPresentInfoKHR) LINKABLE;
 	extern u64 _ZN2nn2os17ConvertToTimeSpanENS0_4TickE(u64 tick) LINKABLE;
+	extern u64 _ZN2nn2os13GetSystemTickEv() LINKABLE;
 }
 
 u32 __nx_applet_type = AppletType_None;
@@ -195,7 +197,7 @@ inline uint64_t getMainAddress() {
 	return 0;
 }
 
-uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
+uint32_t vulkanSwap2 (void* VkQueue_T, void* VkPresentInfoKHR) {
 	static uint8_t FPS_temp = 0;
 	static uint64_t starttick = 0;
 	static uint64_t endtick = 0;
@@ -223,7 +225,92 @@ uint32_t vulkanSwap (void* vk_unk1_1, void* vk_unk2_1) {
 		}
 	}
 
-	uint32_t vulkanResult = vkQueuePresentKHR(vk_unk1_1, vk_unk2_1);
+	uint32_t vulkanResult = _ZN11NvSwapchain15QueuePresentKHREP9VkQueue_TPK16VkPresentInfoKHR(VkQueue_T, VkPresentInfoKHR);
+	endtick = _ZN2nn2os13GetSystemTickEv();
+	framedelta = endtick - frameend;
+	frameavg = ((9*frameavg) + framedelta) / 10;
+	Stats.FPSavg = systemtickfrequency / (float)frameavg;
+
+	if (FPSlock_delayed && FPStiming) {
+		if (Stats.FPSavg > ((float)FPSlock)) {
+			if (range < 200) {
+				FPStiming += 20;
+				range++;
+			}
+		}
+		else if ((std::lround(Stats.FPSavg) == FPSlock) && (Stats.FPSavg < (float)FPSlock)) {
+			if (range > 0) {
+				FPStiming -= 20;
+				range--;
+			}
+		}
+	}
+
+	frameend = endtick;
+	
+	FPS_temp++;
+	deltatick = endtick - starttick;
+
+	Shared.FPSticks[FPStickItr] = framedelta;
+	if (FPStickItr+1 == 10) {
+		FPStickItr = 0;
+	}
+	else FPStickItr++;
+
+	if (deltatick > systemtickfrequency) {
+		starttick = _ZN2nn2os13GetSystemTickEv();
+		Stats.FPS = FPS_temp - 1;
+		FPS_temp = 0;
+		*(Shared.FPS) = Stats.FPS;
+		if (changeFPS && !configRC && FPSlock) {
+			LOCK::applyPatch(configBuffer, configSize, FPSlock);
+			*(Shared.patchApplied) = 1;
+		}
+	}
+
+	*(Shared.FPSavg) = Stats.FPSavg;
+	*(Shared.pluginActive) = true;
+
+	if (FPSlock != *(Shared.FPSlocked)) {
+		if ((*(Shared.FPSlocked) < 60) && (*(Shared.FPSlocked) > 0)) {
+			FPStiming = (systemtickfrequency/(*(Shared.FPSlocked))) - 6000;
+		}
+		else FPStiming = 0;
+		FPSlock = *(Shared.FPSlocked);
+	}
+	
+	return vulkanResult;
+}
+
+uint32_t vulkanSwap (void* VkQueue, void* VkPresentInfoKHR) {
+	static uint8_t FPS_temp = 0;
+	static uint64_t starttick = 0;
+	static uint64_t endtick = 0;
+	static uint64_t deltatick = 0;
+	static uint64_t frameend = 0;
+	static uint64_t framedelta = 0;
+	static uint64_t frameavg = 0;
+	static uint8_t FPSlock = 0;
+	static uint32_t FPStiming = 0;
+	static uint8_t FPStickItr = 0;
+	static uint8_t range = 0;
+	
+	bool FPSlock_delayed = false;
+	
+	if (!starttick) {
+		*(Shared.API) = 3;
+		starttick = _ZN2nn2os13GetSystemTickEv();
+	}
+	if (FPStiming && !LOCK::blockDelayFPS) {
+		if ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
+			FPSlock_delayed = true;
+		}
+		while ((_ZN2nn2os13GetSystemTickEv() - frameend) < FPStiming) {
+			svcSleepThread(-2);
+		}
+	}
+
+	uint32_t vulkanResult = vkQueuePresentKHR(VkQueue, VkPresentInfoKHR);
 	endtick = _ZN2nn2os13GetSystemTickEv();
 	framedelta = endtick - frameend;
 	frameavg = ((9*frameavg) + framedelta) / 10;
@@ -661,6 +748,7 @@ int main(int argc, char *argv[]) {
 			SaltySDCore_ReplaceImport("eglSwapBuffers", (void*)eglSwap);
 			SaltySDCore_ReplaceImport("eglSwapInterval", (void*)eglInterval);
 			SaltySDCore_ReplaceImport("vkQueuePresentKHR", (void*)vulkanSwap);
+			SaltySDCore_ReplaceImport("_ZN11NvSwapchain15QueuePresentKHREP9VkQueue_TPK16VkPresentInfoKHR", (void*)vulkanSwap2);
 
 			Shared.FPSlocked = (uint8_t*)(base + 10);
 			Shared.FPSmode = (uint8_t*)(base + 11);
