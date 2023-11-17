@@ -1,3 +1,5 @@
+# Project is not continued anymore. Delete NX-FPS plugin from SaltySD/plugins folder and download SaltyNX 0.7.0+!
+
 # NX-FPS
 
 SaltyNX plugin that collects FPS data in Nintendo Switch games. You need my fork of SaltyNX 0.5.0+ installed.
